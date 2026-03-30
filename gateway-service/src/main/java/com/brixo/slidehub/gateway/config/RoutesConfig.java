@@ -1,4 +1,4 @@
-package com.brixo.slidehub.gateway.config;
+okpackage com.brixo.slidehub.gateway.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
