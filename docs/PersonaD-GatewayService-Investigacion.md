@@ -6,10 +6,9 @@
 ## 1. Análisis del Gateway Service
 
 **El Gateway Service actúa como punto de entrada principal del sistema SlideHub.**
+>Encargado de enrutar las solicitudes hacia los diferentes microservicios internos. Su función principal es centralizar el acceso, mejorar la seguridad y simplificar la comunicación entre cliente y servicios backend.< 
 
-Encargado de enrutar las solicitudes hacia los diferentes microservicios internos. Su función principal es centralizar el acceso, mejorar la seguridad y simplificar la comunicación entre cliente y servicios backend.
-
-Este servicio está construido bajo el patrón de API Gateway, probablemente usando tecnologías como Spring Cloud Gateway, lo que permite manejar rutas dinámicas, filtros y balanceo de carga.
+Este servicio está construido bajo el patrón de API Gateway, probablemente usando tecnologías como **Spring Cloud Gateway,** lo que permite manejar rutas dinámicas, filtros y balanceo de carga.
 
 ## 2. Rutas (Rutes)
 
@@ -21,7 +20,7 @@ Este servicio está construido bajo el patrón de API Gateway, probablemente usa
 
 >Estas rutas permiten desacoplar el cliente del backend real, ocultando la arquitectura interna.< 
 
-Además, el gateway puede incluir:
+**Además, el gateway puede incluir:**
 
 - Filtros de autenticación (JWT/OAuth2)
 - Logs de tráfico
@@ -42,10 +41,11 @@ Funciones principales:
 En este proyecto, variables como:
 
 - URLs de servicios (STATE_SERVICE_URL, AI_SERVICE_URL)
+
 - Credenciales externas
 - Configuración de base de datos
 
-**son gestionadas mediante variables de entorno en el despliegue.*
+**son gestionadas mediante variables de entorno en el despliegue.**
 
 ## 🚀 4. Despliegue en Render
 
@@ -55,10 +55,10 @@ En este proyecto, variables como:
 Se usa un archivo render.yaml
 Render detecta servicios automáticamente
 Despliega los 4 servicios:
-gateway
-state
-ui
-ai
+- gateway
+- state
+- ui
+- ai
 >⚙️Opción manual:< 
 
 Se crean servicios individuales en Render:
@@ -82,9 +82,9 @@ Se crean servicios individuales en Render:
 
 **El gateway expone el sistema completo a través de un dominio personalizado:**
 
-Dominio: slide.lat
-Configurado mediante CNAME en DNS
-Todas las peticiones pasan por el gateway
+- Dominio: slide.lat
+- Configurado mediante CNAME en DNS
+- Todas las peticiones pasan por el gateway
 
 ## 📊 6. Monitoreo y Salud
 
