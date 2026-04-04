@@ -24,6 +24,7 @@
 		<module>ui-service</module>
 		<module>ai-service</module>
 		<module>gateway-service</module>
+		<module>slidehub-monolith</module> 
 	</modules>
 
 	<dependencyManagement>
