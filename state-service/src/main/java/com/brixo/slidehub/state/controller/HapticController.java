@@ -39,3 +39,4 @@ public class HapticController {
                 .orElse(ResponseEntity.noContent().build());
     }
 }
+
