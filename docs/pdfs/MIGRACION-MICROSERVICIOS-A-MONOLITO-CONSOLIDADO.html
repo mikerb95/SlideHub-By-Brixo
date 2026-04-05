@@ -1,0 +1,219 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+@page { margin: 1in; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.45; color: #111; }
+h1 { font-size: 22pt; margin: 0 0 0.35em 0; }
+h2 { font-size: 15pt; margin: 1.1em 0 0.35em 0; }
+h3 { font-size: 12pt; margin: 0.9em 0 0.25em 0; }
+p { margin: 0.15em 0 0.6em 0; }
+ul, ol { margin: 0.15em 0 0.8em 1.4em; }
+li { margin: 0.12em 0; }
+strong { font-weight: 700; }
+blockquote { margin: 0.6em 0; padding: 0.45em 0.75em; background: #f5f7fa; border-left: 4px solid #99a; }
+hr { border: none; border-top: 1px solid #999; margin: 1em 0; }
+.code { font-family: 'Courier New', monospace; }
+</style></head><body><h1>Migración de Microservicios a Monolito — Documento Consolidado</h1>
+<p><strong>Proyecto:</strong> SlideHub</p>
+<p><strong>Fecha de consolidación:</strong> 2026-04-04</p>
+<p><strong>Estado actual:</strong> Monolito modular en producción (<span class="code">slidehub-monolith</span>)</p>
+<hr/>
+<h2>1) Resumen ejecutivo</h2>
+<p>SlideHub migró de una arquitectura de <strong>4 microservicios</strong> (<span class="code">gateway-service</span>, <span class="code">state-service</span>, <span class="code">ui-service</span>, <span class="code">ai-service</span>) a un <strong>monolito modular</strong> (<span class="code">slidehub-monolith</span>) para simplificar operación, reducir costos de infraestructura y eliminar complejidad innecesaria de red interna (proxy/ruteo/puertos entre servicios).</p>
+<p>La migración mantuvo la separación lógica por módulos (<span class="code">ui</span>, <span class="code">state</span>, <span class="code">ai</span>) dentro de un único proceso Spring Boot, conservando el comportamiento funcional de negocio.</p>
+<hr/>
+<h2>2) Alcance de la migración</h2>
+<h3>Arquitectura origen (microservicios)</h3>
+<ul>
+<li><span class="code">gateway-service</span> (entrada única, ruteo)</li>
+<li><span class="code">state-service</span> (estado/polling/haptics)</li>
+<li><span class="code">ui-service</span> (vistas/auth)</li>
+<li><span class="code">ai-service</span> (Gemini/Groq/notas/deploy tutor)</li>
+<li>Despliegue multi-servicio en Render</li>
+</ul>
+<h3>Arquitectura destino (monolito modular)</h3>
+<ul>
+<li><span class="code">slidehub-monolith</span> (único servicio, puerto único)</li>
+<li>Módulos internos:</li>
+</ul>
+<p>  - <span class="code">ui</span></p>
+<p>  - <span class="code">state</span></p>
+<p>  - <span class="code">ai</span></p>
+<ul>
+<li>Despliegue recomendado: 1 solo Web Service en Render (<span class="code">slidehub-monolith</span>)</li>
+</ul>
+<hr/>
+<h2>3) Qué se tuvo en cuenta durante la migración</h2>
+<h2>3.1 Continuidad funcional</h2>
+<ul>
+<li>Mantener rutas y flujos de usuario (<span class="code">/slides</span>, <span class="code">/remote</span>, <span class="code">/presenter</span>, <span class="code">/main-panel</span>, <span class="code">/presentations</span>, <span class="code">/api/**</span>).</li>
+<li>Mantener integraciones externas (Gemini, Groq, Google Drive, Resend, S3) sin alterar contratos funcionales.</li>
+<li>Evitar regresiones en notas IA, control remoto, demo mode, importación de slides y auth.</li>
+</ul>
+<h2>3.2 Persistencia y datos</h2>
+<ul>
+<li>Preservar almacenamiento híbrido existente:</li>
+</ul>
+<p>  - PostgreSQL (usuarios/presentaciones/sesiones)</p>
+<p>  - Redis (estado efímero/haptics)</p>
+<p>  - MongoDB (notas IA/análisis/deploy guides)</p>
+<ul>
+<li>Mantener migraciones de BD existentes (Flyway).</li>
+</ul>
+<h2>3.3 Seguridad y autenticación</h2>
+<ul>
+<li>Mantener Spring Security y OAuth2 (GitHub/Google).</li>
+<li>Conservar reglas de acceso por rol (<span class="code">PRESENTER</span>, <span class="code">ADMIN</span>) y rutas públicas.</li>
+</ul>
+<h2>3.4 Operación y despliegue</h2>
+<ul>
+<li>Reducir dependencia del gateway como proxy interno entre servicios.</li>
+<li>Evitar coordinación de múltiples health checks entre servicios internos.</li>
+<li>Centralizar build, deploy y observabilidad básica en una sola unidad de despliegue.</li>
+</ul>
+<h2>3.5 Compatibilidad y transición</h2>
+<ul>
+<li>Conservar en repo la estructura legacy de microservicios como referencia histórica.</li>
+<li>Ajustar terminología técnica/UI para reflejar “monolito modular” en vez de “4 servicios”.</li>
+</ul>
+<hr/>
+<h2>4) Qué se creó</h2>
+<h2>4.1 Módulo de ejecución principal</h2>
+<ul>
+<li><strong><span class="code">slidehub-monolith/</span></strong> como servicio principal de ejecución y despliegue.</li>
+</ul>
+<h2>4.2 Artefactos y documentación de migración</h2>
+<ul>
+<li>Fases de migración documentadas:</li>
+</ul>
+<p>  - <span class="code">docs/MIGRACION-MONOLITO-FASE-0.md</span></p>
+<p>  - <span class="code">docs/MIGRACION-MONOLITO-FASE-1.md</span></p>
+<p>  - <span class="code">docs/MIGRACION-MONOLITO-FASE-2.md</span></p>
+<p>  - <span class="code">docs/MIGRACION-MONOLITO-FASE-3-DEPLOY-DOCS.md</span></p>
+<p>  - <span class="code">docs/MIGRACION-MONOLITO-FASE-4-SMOKE.md</span></p>
+<ul>
+<li>Documentación de despliegue monolítico:</li>
+</ul>
+<p>  - <span class="code">DEPLOYMENT.md</span></p>
+<ul>
+<li>Blueprint monolítico de Render:</li>
+</ul>
+<p>  - <span class="code">render.yaml</span> (servicio único <span class="code">slidehub-monolith</span>)</p>
+<h2>4.3 Ajustes funcionales/técnicos relevantes</h2>
+<ul>
+<li>Actualización de narrativa UI y técnica a monolito modular en vistas/documentación.</li>
+<li>Ajustes de detección de rutas de slides para contexto monolito (compatibilidad de path).</li>
+<li>Consolidación de la ejecución local/build en torno a <span class="code">slidehub-monolith</span>.</li>
+</ul>
+<hr/>
+<h2>5) Qué dejó de existir (o dejó de ser obligatorio)</h2>
+<blockquote>Nota importante: en varios casos el componente <strong>no desaparece físicamente del repositorio</strong>, pero <strong>deja de ser parte del modelo operativo recomendado</strong>.</blockquote>
+<h2>5.1 Dejó de existir como requisito operativo</h2>
+<ul>
+<li>Despliegue obligatorio de 4 servicios independientes para operar SlideHub.</li>
+<li>Necesidad de gateway como proxy interno entre servicios para el camino principal de ejecución.</li>
+<li>Gestión diaria de conectividad interna por URLs cruzadas entre servicios como arquitectura por defecto.</li>
+<li>Coordinación de múltiples pipelines de build/deploy por servicio como requisito base.</li>
+</ul>
+<h2>5.2 Dejó de existir como complejidad principal de runtime</h2>
+<ul>
+<li>Orquestación de puertos internos por microservicio para el funcionamiento normal de la app.</li>
+<li>Dependencia de ruteo interno por path entre procesos separados para las funciones core.</li>
+</ul>
+<h2>5.3 Se conserva como legado/histórico</h2>
+<ul>
+<li>Carpetas:</li>
+</ul>
+<p>  - <span class="code">gateway-service/</span></p>
+<p>  - <span class="code">state-service/</span></p>
+<p>  - <span class="code">ui-service/</span></p>
+<p>  - <span class="code">ai-service/</span></p>
+<ul>
+<li>Se mantienen para referencia histórica, validación comparativa y transición controlada.</li>
+</ul>
+<hr/>
+<h2>6) Cambios por dominio técnico</h2>
+<h2>6.1 Build y empaquetado</h2>
+<ul>
+<li>Se mantiene monorepo Maven, pero la ruta principal de compilación/ejecución se centra en:</li>
+</ul>
+<p>  - <span class="code">./mvnw clean compile -pl slidehub-monolith -am</span></p>
+<p>  - <span class="code">./mvnw spring-boot:run -pl slidehub-monolith</span></p>
+<h2>6.2 Despliegue</h2>
+<ul>
+<li><span class="code">render.yaml</span> consolidado a un solo servicio (<span class="code">slidehub-monolith</span>) con health check único:</li>
+</ul>
+<p>  - <span class="code">/actuator/health</span></p>
+<h2>6.3 Frontend/UX técnico</h2>
+<ul>
+<li>Vistas y textos técnicos actualizados para evitar contradicción arquitectónica (microservicios vs monolito).</li>
+</ul>
+<h2>6.4 Integraciones externas</h2>
+<ul>
+<li>Se mantienen sin cambio de paradigma:</li>
+</ul>
+<p>  - HTTP <span class="code">WebClient</span> para Gemini/Groq/Drive/Resend</p>
+<p>  - AWS SDK v2 para S3</p>
+<hr/>
+<h2>7) Riesgos evaluados y mitigaciones</h2>
+<h2>7.1 Riesgos</h2>
+<ul>
+<li>Mayor radio de impacto por despliegue único (si falla, afecta todo).</li>
+<li>Necesidad de disciplina modular interna para evitar “big ball of mud”.</li>
+<li>Crecimiento de tiempos de build en un único artefacto.</li>
+</ul>
+<h2>7.2 Mitigaciones aplicadas</h2>
+<ul>
+<li>Mantener separación por módulos lógicos (<span class="code">ui/state/ai</span>) y paquetes.</li>
+<li>Mantener documentación de fases y smoke tests de migración.</li>
+<li>Mantener stores desacoplados (PostgreSQL/Redis/Mongo) y prácticas de configuración por entorno.</li>
+</ul>
+<hr/>
+<h2>8) Evidencia de estado final</h2>
+<ul>
+<li>README declara explícitamente estado actual monolítico modular.</li>
+<li><span class="code">render.yaml</span> define despliegue de un único servicio.</li>
+<li><span class="code">DEPLOYMENT.md</span> prescribe flujo de deploy monolítico.</li>
+<li>Fases de migración documentadas en <span class="code">docs/MIGRACION-MONOLITO-FASE-*</span>.</li>
+</ul>
+<hr/>
+<h2>9) Justificación del cambio (sustento de negocio y operación)</h2>
+<p>La migración se realizó por razones técnicas y económicas concretas:</p>
+<h2>9.1 Ahorro de costos de despliegue</h2>
+<ul>
+<li>Pasar de múltiples instancias a <strong>una sola instancia</strong> reduce costo base mensual.</li>
+<li>Menor consumo operativo asociado a despliegues por servicio, monitoreo y reinicios independientes.</li>
+</ul>
+<h2>9.2 Menor complejidad operativa</h2>
+<ul>
+<li>Se evita operar y depurar una malla interna de servicios para casos donde no era estrictamente necesaria.</li>
+<li>Menos puntos de falla por red interna entre servicios.</li>
+</ul>
+<h2>9.3 Eliminación de carga del gateway como pieza obligatoria</h2>
+<ul>
+<li>Se reduce la necesidad de gestionar reglas de proxy/ruteo interno para cada path entre servicios.</li>
+<li>Se simplifica troubleshooting de latencia/rutas porque el core vive en un proceso único.</li>
+</ul>
+<h2>9.4 Simplificación de puertos, networking y configuración</h2>
+<ul>
+<li>Se evita coordinar múltiples puertos internos como condición de funcionamiento diario.</li>
+<li>Menos variables cruzadas de URL interna por servicio.</li>
+<li>Menor riesgo de errores de configuración de comunicación inter-servicios.</li>
+</ul>
+<h2>9.5 Menor fricción de CI/CD</h2>
+<ul>
+<li>Pipeline principal más directo: construir y desplegar un solo artefacto.</li>
+<li>Menos acoplamiento entre despliegues parciales que puedan romper contrato entre servicios.</li>
+</ul>
+<h2>9.6 Mejor equilibrio costo-beneficio para el tamaño actual del producto</h2>
+<ul>
+<li>Para la etapa actual de SlideHub, la complejidad de microservicios no compensa el costo operativo.</li>
+<li>Monolito modular mantiene orden arquitectónico interno, con costo y operación mucho más simples.</li>
+</ul>
+<hr/>
+<h2>10) Resultado final</h2>
+<p>SlideHub queda operando con una arquitectura <strong>monolítica modular</strong>, preservando capacidades funcionales principales y reduciendo complejidad/costo de plataforma.</p>
+<p>En términos prácticos:</p>
+<ul>
+<li><strong>Se gana simplicidad operativa y económica.</strong></li>
+<li><strong>Se pierde complejidad innecesaria de infraestructura distribuida para la escala actual.</strong></li>
+<li><strong>Se mantiene trazabilidad de la migración y legado técnico en el repositorio.</strong></li>
+</ul></body></html>
