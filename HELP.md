@@ -1,5 +1,13 @@
 # Getting Started
 
+## Propiedad y licencia
+
+Este repositorio es **código cerrado** y se publica en GitHub solo para visibilidad y referencia.
+
+- Licencia: **All Rights Reserved**
+- No se permite usar, copiar, modificar, redistribuir, sublicenciar ni comercializar el código sin autorización escrita previa.
+- La publicación pública del repositorio no concede permisos de uso más allá de los expresamente otorgados por el titular.
+
 ### Reference Documentation
 For further reference, please consider the following sections:
 
@@ -42,4 +50,3 @@ Due to Maven's design, elements are inherited from the parent POM to the project
 While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the parent.
 To prevent this, the project POM contains empty overrides for these elements.
 If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
-
