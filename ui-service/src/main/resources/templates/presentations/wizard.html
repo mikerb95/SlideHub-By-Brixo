@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva presentación — SlideHub</title>
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <style>
+        /* ── Wizard step indicator ── */
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--sh-font-mono);
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 2px solid var(--sh-border);
+            color: var(--sh-text-3);
+            background: var(--sh-deep);
+            transition: all 0.3s ease;
+        }
+
+        .step-dot.active {
+            border-color: var(--sh-blue);
+            color: var(--sh-blue);
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .step-dot.done {
+            border-color: var(--sh-green);
+            color: var(--sh-deep);
+            background: var(--sh-green);
+        }
+
+        .step-line {
+            flex: 1;
+            height: 2px;
+            background: var(--sh-border);
+            transition: background 0.3s ease;
+        }
+
+        .step-line.done {
+            background: var(--sh-green);
+        }
+
+        /* ── Upload zone ── */
+        #upload-drop-zone {
+            border: 2px dashed var(--sh-border-active);
+            border-radius: var(--sh-r-md);
+            padding: 2.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color var(--sh-t-fast), background var(--sh-t-fast);
+        }
+
+        #upload-drop-zone.drag-over {
+            border-color: var(--sh-blue);
+            background: var(--sh-blue-dim);
+        }
+
+        /* ── Folder/image items ── */
+        .folder-item {
+            cursor: pointer;
+            padding: 0.4rem 0.7rem;
+            border-radius: var(--sh-r-md);
+            transition: background var(--sh-t-fast), border-color var(--sh-t-fast);
+            background: var(--sh-deep);
+            border: 1px solid var(--sh-border);
+            font-family: var(--sh-font-mono);
+            font-size: 0.8rem;
+            color: var(--sh-text-2);
+        }
+
+        .folder-item:hover {
+            border-color: var(--sh-blue);
+            color: var(--sh-text-1);
+        }
+
+        .folder-item.selected {
+            background: var(--sh-blue-dim);
+            border-color: var(--sh-blue);
+            color: var(--sh-blue);
+        }
+
+        /* ── Progress bar ── */
+        .progress-track {
+            height: 4px;
+            background: var(--sh-border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--sh-blue);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .repo-assistant-panel {
+            background: rgba(88, 166, 255, 0.06);
+            border: 1px solid rgba(88, 166, 255, 0.2);
+            border-radius: var(--sh-r-md);
+            padding: 0.9rem;
+        }
+
+        .repo-assistant-title {
+            font-family: var(--sh-font-mono);
+            font-size: 0.75rem;
+            color: var(--sh-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .repo-assistant-status {
+            font-size: 0.82rem;
+            color: var(--sh-text-2);
+            margin-bottom: 0.5rem;
+        }
+
+        .repo-assistant-tip {
+            font-size: 0.75rem;
+            color: var(--sh-text-3);
+            line-height: 1.35;
+            margin-top: 0.5rem;
+        }
+
+        .repo-assistant-meta {
+            font-family: var(--sh-font-mono);
+            font-size: 0.68rem;
+            color: var(--sh-text-3);
+            margin-top: 0.35rem;
+        }
+
+        /* ── Note cards ── */
+        .note-card {
+            background: rgba(88, 166, 255, 0.06);
+            border: 1px solid rgba(88, 166, 255, 0.15);
+            border-radius: var(--sh-r-md);
+            padding: 1rem;
+        }
+
+        .key-phrase {
+            background: rgba(88, 166, 255, 0.2);
+            border-radius: var(--sh-r-md);
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-family: var(--sh-font-mono);
+            color: var(--sh-blue);
+        }
+
+        /* ── Participant items ── */
+        .participant-item {
+            background: var(--sh-deep);
+            border: 1px solid var(--sh-border);
+            border-radius: var(--sh-r-md);
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ── Step panel transitions ── */
+        .wizard-step {
+            display: none;
+            animation: fade-in 0.4s ease both;
+        }
+
+        .wizard-step.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="sh bg-sh-deep antialiased min-h-screen">
+
+    <!-- ═══ Nav ═══ -->
+    <nav class="sh-nav">
+        <div class="sh-nav-inner">
+            <div class="flex items-center gap-3">
+                <a href="/presentations" class="flex items-center gap-3 no-underline text-[var(--sh-text-1)]">
+                    <span class="font-brand text-base tracking-tight">SlideHub</span>
+                </a>
+                <span class="sh-badge ml-1">SETUP</span>
+            </div>
+            <a href="/presentations" class="sh-btn sh-btn-ghost text-xs">
+                <i class="fa-solid fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </nav>
+
+    <div class="max-w-3xl mx-auto px-4 pt-16 pb-12">
+
+        <!-- ═══ Step Indicator ═══ -->
+        <div class="flex items-center gap-0 mb-8 px-4" id="step-indicator">
+            <div class="step-dot active" data-step="1">1</div>
+            <div class="step-line" data-line="1"></div>
+            <div class="step-dot" data-step="2">2</div>
+            <div class="step-line" data-line="2"></div>
+            <div class="step-dot" data-step="3">3</div>
+            <div class="step-line" data-line="3"></div>
+            <div class="step-dot" data-step="4">4</div>
+            <div class="step-line" data-line="4"></div>
+            <div class="step-dot" data-step="5">5</div>
+            <div class="step-line" data-line="5"></div>
+            <div class="step-dot" data-step="6">6</div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- PASO 1: Subir diapositivas                                         -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div class="wizard-step active" id="step-1">
+            <div class="sh-card p-6">
+                <div class="sh-label mb-1"><i class="fa-solid fa-upload mr-1"></i>PASO 1</div>
+                <h2 class="font-brand text-2xl mb-2 text-[var(--sh-text-1)]">Sube tu presentación</h2>
+                <p class="text-sm text-[var(--sh-text-3)] mb-5">Importa las diapositivas desde Google Drive o sube los
+                    archivos desde tu PC.</p>
+
+                <!-- Name + Description -->
+                <div class="grid md:grid-cols-2 gap-3 mb-5">
+                    <div>
+                        <label class="sh-input-label">Nombre *</label>
+                        <input type="text" id="pres-name" class="sh-input" placeholder="Mi presentación">
+                    </div>
+                    <div>
+                        <label class="sh-input-label">Descripción</label>
+                        <input type="text" id="pres-desc" class="sh-input" placeholder="Opcional">
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="sh-tabs mb-5">
+                    <button class="sh-tab" id="tab-upload" onclick="showImportTab('upload')">
+                        <i class="fa-solid fa-upload mr-1"></i> Subir archivos
+                    </button>
+                    <button class="sh-tab" id="tab-drive" onclick="showImportTab('drive')">
+                        <i class="fa-brands fa-google-drive mr-1"></i> Google Drive
+                    </button>
+                </div>
+
+                <!-- Upload Panel -->
+                <div id="panel-upload">
+                    <div id="upload-drop-zone" onclick="document.getElementById('file-input').click()">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl mb-2 block text-[var(--sh-text-3)]"></i>
+                        <p class="text-sm text-[var(--sh-text-2)] mb-1">Arrastra imágenes aquí o haz clic</p>
+                        <p class="font-mono text-xs text-[var(--sh-text-3)]">PNG, JPG, GIF, WEBP</p>
+                        <input type="file" id="file-input" accept=".png,.jpg,.jpeg,.gif,.webp" multiple class="hidden"
+                            onchange="onFilesSelected(event)">
+                    </div>
+                    <div id="file-preview" class="mt-3 flex flex-wrap gap-2"></div>
+                    <div id="upload-error" class="sh-alert sh-alert-error hidden mt-2"></div>
+                    <button type="button" class="sh-btn sh-btn-primary mt-4" id="btn-upload" onclick="doUpload()"
+                        disabled>
+                        <i class="fa-solid fa-upload mr-1"></i> Subir presentación
+                    </button>
+                    <div id="upload-progress" class="hidden mt-2 font-mono text-xs text-[var(--sh-text-3)]">
+                        <i class="fa-solid fa-spinner fa-spin mr-1"></i>Subiendo archivos...
+                    </div>
+                </div>
+
+                <!-- Drive Panel — File Explorer -->
+                <div id="panel-drive" class="hidden">
+                    <div th:if="${!hasGoogleToken}" class="sh-alert sh-alert-warn mb-4">
+                        <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                        <span>Conecta tu <a href="/oauth2/authorization/google-drive" class="underline">cuenta de Google
+                                Drive</a> para acceder a tus archivos.</span>
+                    </div>
+                    <div th:if="${hasGoogleToken}">
+                        <!-- Breadcrumb -->
+                        <nav id="drive-breadcrumb"
+                            class="flex items-center gap-1 mb-3 font-mono text-xs text-[var(--sh-text-3)] flex-wrap">
+                            <button
+                                class="hover:text-[var(--sh-blue)] transition-colors cursor-pointer bg-transparent border-none p-0"
+                                onclick="browseDrive('root')">
+                                <i class="fa-solid fa-hard-drive mr-0.5"></i>Mi Drive
+                            </button>
+                        </nav>
+
+                        <!-- Cargando -->
+                        <div id="drive-loading"
+                            class="hidden font-mono text-xs text-[var(--sh-text-3)] mb-3 py-8 text-center">
+                            <i class="fa-solid fa-spinner fa-spin mr-1"></i>Cargando...
+                        </div>
+
+                        <!-- Explorer grid -->
+                        <div id="drive-explorer"
+                            class="border border-[var(--sh-border)] rounded-tech overflow-hidden mb-4"
+                            style="min-height:120px">
+                            <!-- Empty state (before first load) -->
+                            <div id="drive-empty"
+                                class="flex flex-col items-center justify-center py-10 text-[var(--sh-text-3)]">
+                                <i class="fa-brands fa-google-drive text-2xl mb-2 opacity-40"></i>
+                                <span class="text-sm">Haz clic en la pestaña para explorar tu Drive</span>
+                            </div>
+                            <!-- Folder/file items rendered here -->
+                            <div id="drive-items" class="hidden"></div>
+                        </div>
+
+                        <!-- Selected folder info -->
+                        <div id="drive-selection"
+                            class="hidden mb-4 p-3 rounded-tech bg-[var(--sh-blue-dim)] border border-[rgba(88,166,255,0.25)]">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-folder-open text-[var(--sh-blue)]"></i>
+                                    <span class="font-mono text-sm text-[var(--sh-text-1)]" id="drive-sel-name"></span>
+                                    <span class="sh-badge text-[0.6rem]" id="drive-sel-count">0 imágenes</span>
+                                </div>
+                                <button type="button" class="sh-btn text-xs py-0.5 px-2" onclick="confirmDriveFolder()">
+                                    <i class="fa-solid fa-check mr-1"></i>Seleccionar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="drive-error" class="sh-alert sh-alert-error hidden mb-3"></div>
+
+                        <button type="button" class="sh-btn sh-btn-primary" id="btn-import-drive"
+                            onclick="doDriveImport()" disabled>
+                            <i class="fa-solid fa-download mr-1"></i> Importar desde Drive
+                        </button>
+                        <div id="drive-progress" class="hidden mt-2 font-mono text-xs text-[var(--sh-text-3)]">
+                            <i class="fa-solid fa-spinner fa-spin mr-1"></i>Importando...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- PASO 2: Repositorio GitHub                                         -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div class="wizard-step" id="step-2">
+            <div class="sh-card p-6">
+                <div class="sh-label mb-1"><i class="fa-brands fa-github mr-1"></i>PASO 2</div>
+                <h2 class="font-brand text-2xl mb-2 text-[var(--sh-text-1)]">Repositorio GitHub</h2>
+                <p class="text-sm text-[var(--sh-text-3)] mb-5">Proporciona la URL del repositorio para que Gemini
+                    analice el contexto del proyecto.</p>
+
+                <div class="mb-4">
+                    <label class="sh-input-label">URL del Repositorio</label>
+                    <input type="url" id="repo-url" class="sh-input" placeholder="https://github.com/usuario/proyecto">
+                    <div class="text-xs text-[var(--sh-text-3)] mt-1">Gemini usará el código fuente para generar notas
+                        más precisas.</div>
+                </div>
+
+                <button type="button" class="sh-btn sh-btn-primary" id="btn-analyze-repo" onclick="analyzeRepo()">
+                    <i class="fa-solid fa-magnifying-glass-chart mr-1"></i> Analizar Repositorio
+                </button>
+                <div id="repo-progress" class="repo-assistant-panel hidden mt-3">
+                    <div class="repo-assistant-title">
+                        <i class="fa-solid fa-brain"></i>
+                        <span>Gemini está trabajando...</span>
+                    </div>
+                    <div id="repo-status-text" class="repo-assistant-status">Analizando estructura del repositorio...
+                    </div>
+                    <div class="progress-track">
+                        <div id="repo-progress-fill" class="progress-fill" style="width: 8%"></div>
+                    </div>
+                    <div id="repo-meta-text" class="repo-assistant-meta">Iniciando...</div>
+                </div>
+                <div id="repo-tips-panel" class="repo-assistant-panel hidden mt-2">
+                    <div class="repo-assistant-title">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <span>Tips de uso</span>
+                    </div>
+                    <div id="repo-tip-text" class="repo-assistant-tip">
+                        Tip: un repositorio con README claro y estructura consistente mejora la calidad de las notas IA.
+                    </div>
+                </div>
+                <div id="repo-result" class="hidden mt-3 note-card">
+                    <div class="font-mono text-xs text-[var(--sh-green)] mb-2"><i
+                            class="fa-solid fa-check mr-1"></i>Repositorio analizado</div>
+                    <div id="repo-summary" class="text-sm text-[var(--sh-text-2)]"></div>
+                </div>
+                <div id="repo-error" class="sh-alert sh-alert-error hidden mt-3"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- PASO 3: Análisis IA + generación de notas                          -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div class="wizard-step" id="step-3">
+            <div class="sh-card p-6">
+                <div class="sh-label mb-1"><i class="fa-solid fa-robot mr-1"></i>PASO 3</div>
+                <h2 class="font-brand text-2xl mb-2 text-[var(--sh-text-1)]">Análisis IA de diapositivas</h2>
+                <p class="text-sm text-[var(--sh-text-3)] mb-5">Gemini analiza visualmente cada diapositiva y Groq
+                    genera notas de apoyo para el presentador.</p>
+
+                <!-- Pipeline info -->
+                <div class="rounded p-3 mb-5" style="background: var(--sh-deep); font-size: 0.75rem;">
+                    <div class="flex items-center gap-2 mb-1.5 text-[var(--sh-text-3)]">
+                        <i class="fa-solid fa-eye" style="color: var(--sh-blue);"></i>
+                        <span>Gemini Vision — análisis visual de cada slide</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-1.5 text-[var(--sh-text-3)]">
+                        <i class="fa-solid fa-code-branch" style="color: var(--sh-amber);"></i>
+                        <span>Gemini — extracción de contexto del repositorio</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-[var(--sh-text-3)]">
+                        <i class="fa-solid fa-bolt" style="color: var(--sh-green);"></i>
+                        <span>Groq — generación de notas estructuradas</span>
+                    </div>
+                </div>
+
+                <button type="button" class="sh-btn sh-btn-primary w-full" id="btn-generate-notes"
+                    onclick="generateNotes()">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generar Notas IA
+                </button>
+                <div class="text-xs font-mono text-[var(--sh-text-3)] text-center mt-1" id="notes-estimate"></div>
+
+                <!-- Progress -->
+                <div id="notes-progress" class="hidden mt-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-spinner fa-spin" style="color: var(--sh-blue);"></i>
+                        <span class="font-mono text-sm text-[var(--sh-text-1)]">Generando notas...</span>
+                    </div>
+                    <div class="progress-track mb-2">
+                        <div class="progress-fill" id="notes-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div id="notes-progress-text" class="text-xs font-mono text-[var(--sh-text-3)]">Iniciando pipeline
+                        IA...</div>
+                    <div id="notes-tip-text" class="repo-assistant-tip mt-2">
+                        Tip: mientras se generan notas, puedes revisar el repo y preparar tus puntos clave de demo.
+                    </div>
+                    <div id="notes-meta-text" class="repo-assistant-meta">Preparando pipeline IA...</div>
+                </div>
+
+                <!-- Success -->
+                <div id="notes-success" class="hidden mt-4">
+                    <div class="flex items-center gap-2" style="color: var(--sh-green);">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span class="font-mono text-sm font-semibold">Notas generadas</span>
+                    </div>
+                    <div id="notes-count" class="text-xs font-mono text-[var(--sh-text-3)] mt-1"></div>
+                </div>
+                <div id="notes-error" class="sh-alert sh-alert-error hidden mt-3"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- PASO 4: Revisar notas                                              -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div class="wizard-step" id="step-4">
+            <div class="sh-card p-6">
+                <div class="sh-label mb-1"><i class="fa-solid fa-clipboard-list mr-1"></i>PASO 4</div>
+                <h2 class="font-brand text-2xl mb-2 text-[var(--sh-text-1)]">Revisa las notas</h2>
+                <p class="text-sm text-[var(--sh-text-3)] mb-5">Revisa las notas generadas por IA para cada diapositiva.
+                </p>
+                <div id="notes-review-container" class="space-y-3">
+                    <div class="text-center py-6 text-[var(--sh-text-3)] font-mono text-xs">Cargando notas...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- PASO 5: Participantes                                              -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div class="wizard-step" id="step-5">
+            <div class="sh-card p-6">
+                <div class="sh-label mb-1"><i class="fa-solid fa-users mr-1"></i>PASO 5</div>
+                <h2 class="font-brand text-2xl mb-2 text-[var(--sh-text-1)]">Participantes</h2>
+                <p class="text-sm text-[var(--sh-text-3)] mb-5">Agrega los co-presentadores que expondran contigo. Si
+                    presentas solo, puedes omitir este paso.</p>
+
+                <div class="flex gap-2 mb-4">
+                    <input id="participant-name" class="sh-input flex-1" maxlength="120"
+                        placeholder="Nombre del participante">
+                    <button type="button" class="sh-btn sh-btn-primary px-3" id="btn-add-participant"
+                        onclick="addParticipant()">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <div id="participants-list" class="space-y-2">
+                    <div class="text-xs font-mono text-[var(--sh-text-3)]">Sin participantes aún.</div>
+                </div>
+                <div id="participant-error" class="sh-alert sh-alert-error hidden mt-3"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- PASO 6: Sesión + QR                                                -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div class="wizard-step" id="step-6">
+            <div class="sh-card p-6 text-center">
+                <div class="sh-label mb-1"><i class="fa-solid fa-qrcode mr-1"></i>PASO 6</div>
+                <h2 class="font-brand text-2xl mb-2 text-[var(--sh-text-1)]">Listo para presentar</h2>
+                <p class="text-sm text-[var(--sh-text-3)] mb-5">Inicia la sesión y comparte el QR con tu equipo.</p>
+
+                <div id="session-not-started">
+                    <button type="button" class="sh-btn sh-btn-primary text-base px-8 py-3" onclick="startSession()">
+                        <i class="fa-solid fa-play mr-2"></i> Iniciar sesión
+                    </button>
+                </div>
+
+                <div id="session-started" class="hidden">
+                    <div class="inline-block p-4 bg-white rounded-tech-lg mb-4">
+                        <img id="session-qr" alt="QR" class="mx-auto" style="width: 220px; height: 220px;">
+                    </div>
+                    <div class="flex justify-center gap-2 mb-4">
+                        <input id="session-join-url" type="text" class="sh-input text-xs max-w-sm" readonly>
+                        <button type="button" class="sh-btn text-xs px-2" onclick="copyJoinUrl()">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs font-mono text-[var(--sh-text-3)] mb-6">Escanea el QR o comparte el link para
+                        unirse.</p>
+
+                    <div class="flex justify-center gap-3">
+                        <a id="link-presenter" href="#" class="sh-btn sh-btn-primary">
+                            <i class="fa-solid fa-chalkboard mr-1"></i> Presentar
+                        </a>
+                        <a id="link-panel" href="#" class="sh-btn sh-btn-ghost">
+                            <i class="fa-solid fa-table-cells-large mr-1"></i> Panel
+                        </a>
+                    </div>
+                </div>
+                <div id="session-error" class="sh-alert sh-alert-error hidden mt-3"></div>
+            </div>
+        </div>
+
+        <!-- ═══ Navigation Buttons ═══ -->
+        <div class="flex justify-between mt-6">
+            <button type="button" class="sh-btn sh-btn-ghost" id="btn-prev" onclick="prevStep()" style="display:none;">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Anterior
+            </button>
+            <div class="flex-1"></div>
+            <button type="button" class="sh-btn sh-btn-ghost" id="btn-skip" onclick="nextStep()" style="display:none;">
+                Omitir <i class="fa-solid fa-forward ml-1"></i>
+            </button>
+            <button type="button" class="sh-btn sh-btn-primary ml-2" id="btn-next" onclick="nextStep()"
+                style="display:none;">
+                Siguiente <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const hasGoogleToken = /*[[${hasGoogleToken}]]*/ false;
+
+        // ── CSRF ──
+        function csrfHeaders() {
+            const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+            const token = document.querySelector('meta[name="_csrf"]')?.content;
+            return header && token ? { [header]: token } : {};
+        }
+
+        // ── Wizard State ──
+        const W = {
+            step: 1,
+            totalSteps: 6,
+            presentationId: null,
+            totalSlides: 0,
+            repoUrl: null,
+            notesGenerated: false,
+            participants: [],
+            sessionStarted: false
+        };
+
+        function hasPresentationContext() {
+            return !!W.presentationId && W.presentationId !== 'null' && W.presentationId !== 'undefined';
+        }
+
+        function persistPresentationIdInUrl() {
+            if (!hasPresentationContext()) return;
+            const url = new URL(window.location.href);
+            url.searchParams.set('presentationId', W.presentationId);
+            history.replaceState(null, '', url.pathname + url.search + url.hash);
+        }
+
+        function restorePresentationIdFromUrl() {
+            const fromUrl = new URL(window.location.href).searchParams.get('presentationId');
+            if (fromUrl && fromUrl !== 'null' && fromUrl !== 'undefined') {
+                W.presentationId = fromUrl;
+            }
+        }
+
+        // ── Step Navigation ──
+        function goToStep(n) {
+            if (n < 1 || n > W.totalSteps) return;
+            if (n >= 3 && !hasPresentationContext()) {
+                n = 1;
+            }
+            document.querySelectorAll('.wizard-step').forEach(el => el.classList.remove('active'));
+            document.getElementById('step-' + n).classList.add('active');
+
+            // Update dots
+            document.querySelectorAll('.step-dot').forEach(dot => {
+                const s = parseInt(dot.dataset.step);
+                dot.classList.toggle('active', s === n);
+                dot.classList.toggle('done', s < n);
+            });
+            document.querySelectorAll('.step-line').forEach(line => {
+                const s = parseInt(line.dataset.line);
+                line.classList.toggle('done', s < n);
+            });
+
+            W.step = n;
+            const url = new URL(window.location.href);
+            history.replaceState(null, '', url.pathname + url.search + '#step-' + n);
+            updateNavButtons();
+            onStepEnter(n);
+        }
+
+        function nextStep() { goToStep(W.step + 1); }
+        function prevStep() { goToStep(W.step - 1); }
+
+        function updateNavButtons() {
+            const prev = document.getElementById('btn-prev');
+            const next = document.getElementById('btn-next');
+            const skip = document.getElementById('btn-skip');
+
+            prev.style.display = W.step > 1 ? '' : 'none';
+            next.style.display = W.step < W.totalSteps ? '' : 'none';
+            skip.style.display = '';
+
+            // Step 1: must have uploaded slides
+            if (W.step === 1) {
+                next.disabled = !W.presentationId;
+                skip.style.display = 'none';
+            }
+            // Step 2: repo is optional (skippable)
+            else if (W.step === 2) {
+                next.disabled = false;
+                skip.style.display = '';
+            }
+            // Step 3: notes generation (skippable)
+            else if (W.step === 3) {
+                next.disabled = false;
+                skip.style.display = '';
+            }
+            // Step 4: review only
+            else if (W.step === 4) {
+                next.disabled = false;
+                skip.style.display = 'none';
+            }
+            // Step 5: participants (skippable)
+            else if (W.step === 5) {
+                next.disabled = false;
+                skip.style.display = '';
+            }
+            // Step 6: final
+            else if (W.step === 6) {
+                next.style.display = 'none';
+                skip.style.display = 'none';
+            }
+        }
+
+        function onStepEnter(n) {
+            if (n === 3) {
+                document.getElementById('notes-estimate').textContent =
+                    '~' + (W.totalSlides * 5) + 's para ' + W.totalSlides + ' diapositivas';
+            }
+            if (n === 4) loadNotesReview();
+            if (n === 6) {
+                document.getElementById('link-presenter').href = '/presenter?presentationId=' + W.presentationId;
+                document.getElementById('link-panel').href = '/main-panel?presentationId=' + W.presentationId;
+            }
+        }
+
+        // ── STEP 1: Upload ──
+        function showImportTab(tab) {
+            document.getElementById('panel-upload').classList.toggle('hidden', tab !== 'upload');
+            document.getElementById('panel-drive').classList.toggle('hidden', tab !== 'drive');
+            document.getElementById('tab-upload').classList.toggle('active', tab === 'upload');
+            document.getElementById('tab-drive').classList.toggle('active', tab === 'drive');
+            // Auto-load Drive root on first tab activation
+            if (tab === 'drive' && !driveLoaded) {
+                driveLoaded = true;
+                browseDrive('root');
+            }
+        }
+
+        let selectedFiles = [];
+        let selectedFolderId = null, selectedFolderName = '';
+
+        function onFilesSelected(event) {
+            selectedFiles = Array.from(event.target.files);
+            renderFilePreview();
+            document.getElementById('btn-upload').disabled = selectedFiles.length === 0;
+        }
+
+        function renderFilePreview() {
+            const preview = document.getElementById('file-preview');
+            preview.innerHTML = '';
+            selectedFiles.sort((a, b) => a.name.localeCompare(b.name));
+            selectedFiles.forEach((f, i) => {
+                const span = document.createElement('span');
+                span.className = 'sh-badge';
+                span.textContent = (i + 1) + '. ' + f.name;
+                preview.appendChild(span);
+            });
+        }
+
+        // Drag-drop
+        const dropZone = document.getElementById('upload-drop-zone');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+            dropZone.addEventListener('drop', e => {
+                e.preventDefault(); dropZone.classList.remove('drag-over');
+                selectedFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                renderFilePreview();
+                document.getElementById('btn-upload').disabled = selectedFiles.length === 0;
+            });
+        }
+
+        async function doUpload() {
+            const name = document.getElementById('pres-name').value.trim();
+            if (!name) { showError('upload-error', 'El nombre es requerido.'); return; }
+            if (selectedFiles.length === 0) { showError('upload-error', 'Selecciona al menos un archivo.'); return; }
+            hideError('upload-error');
+            document.getElementById('btn-upload').disabled = true;
+            document.getElementById('upload-progress').classList.remove('hidden');
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('description', document.getElementById('pres-desc').value.trim());
+            selectedFiles.forEach(f => formData.append('files', f));
+
+            try {
+                const res = await fetch('/api/presentations/create-from-upload', { method: 'POST', body: formData, headers: csrfHeaders() });
+                const data = await res.json();
+                document.getElementById('upload-progress').classList.add('hidden');
+                if (res.ok && data.success) {
+                    W.presentationId = data.presentationId;
+                    W.totalSlides = data.totalSlides || selectedFiles.length;
+                    persistPresentationIdInUrl();
+                    onUploadComplete();
+                } else {
+                    showError('upload-error', data.error || 'Error al subir.');
+                    document.getElementById('btn-upload').disabled = false;
+                }
+            } catch (e) {
+                document.getElementById('upload-progress').classList.add('hidden');
+                showError('upload-error', 'Error de conexion.');
+                document.getElementById('btn-upload').disabled = false;
+            }
+        }
+
+        // ── Drive File Explorer ──
+        let driveBreadcrumb = [{ id: 'root', name: 'Mi Drive' }];
+        let driveLoaded = false;
+        let currentFolderImages = [];
+
+        async function browseDrive(parentId) {
+            hideError('drive-error');
+            document.getElementById('drive-loading').classList.remove('hidden');
+            document.getElementById('drive-items').classList.add('hidden');
+            document.getElementById('drive-empty').classList.add('hidden');
+            document.getElementById('drive-selection').classList.add('hidden');
+            selectedFolderId = null;
+            selectedFolderName = null;
+            currentFolderImages = [];
+            document.getElementById('btn-import-drive').disabled = true;
+
+            try {
+                const res = await fetch('/api/presentations/drive/browse?parentId=' + encodeURIComponent(parentId));
+                const data = await res.json();
+                document.getElementById('drive-loading').classList.add('hidden');
+
+                if (!res.ok) {
+                    showError('drive-error', data.error || 'Error accediendo a Drive.');
+                    return;
+                }
+
+                const items = document.getElementById('drive-items');
+                items.innerHTML = '';
+                items.classList.remove('hidden');
+
+                const folders = data.folders || [];
+                const files = data.files || [];
+                currentFolderImages = files;
+
+                if (folders.length === 0 && files.length === 0) {
+                    items.innerHTML = '<div class="flex flex-col items-center justify-center py-8 text-[var(--sh-text-3)]">'
+                        + '<i class="fa-solid fa-folder-open text-xl mb-2 opacity-40"></i>'
+                        + '<span class="text-sm">Carpeta vacia</span></div>';
+                    return;
+                }
+
+                // Render folders
+                folders.forEach(f => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-[var(--sh-hover)] transition-colors border-b border-[var(--sh-border)]';
+                    row.innerHTML = '<i class="fa-solid fa-folder text-[var(--sh-amber)] text-sm w-5 text-center"></i>'
+                        + '<span class="text-sm text-[var(--sh-text-1)] flex-1 truncate">' + escHtml(f.name) + '</span>'
+                        + '<i class="fa-solid fa-chevron-right text-[0.6rem] text-[var(--sh-text-3)]"></i>';
+                    row.onclick = () => navigateToFolder(f.id, f.name);
+                    items.appendChild(row);
+                });
+
+                // Render image files
+                files.forEach(img => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center gap-3 px-4 py-2 border-b border-[var(--sh-border)] last:border-b-0';
+                    const ext = img.name.split('.').pop().toUpperCase();
+                    row.innerHTML = '<i class="fa-solid fa-image text-[var(--sh-blue)] text-sm w-5 text-center opacity-60"></i>'
+                        + '<span class="text-sm text-[var(--sh-text-2)] flex-1 truncate">' + escHtml(img.name) + '</span>'
+                        + '<span class="font-mono text-[0.6rem] text-[var(--sh-text-3)]">' + escHtml(ext) + '</span>';
+                    items.appendChild(row);
+                });
+
+                // If this folder has images, show selection prompt
+                if (files.length > 0) {
+                    const sel = document.getElementById('drive-selection');
+                    const crumb = driveBreadcrumb[driveBreadcrumb.length - 1];
+                    document.getElementById('drive-sel-name').textContent = crumb.name;
+                    document.getElementById('drive-sel-count').textContent = files.length + ' imagen' + (files.length !== 1 ? 'es' : '');
+                    sel.classList.remove('hidden');
+                }
+
+            } catch (e) {
+                document.getElementById('drive-loading').classList.add('hidden');
+                showError('drive-error', 'Error de conexion con Drive.');
+            }
+        }
+
+        function navigateToFolder(folderId, folderName) {
+            // Update breadcrumb
+            const existingIdx = driveBreadcrumb.findIndex(b => b.id === folderId);
+            if (existingIdx >= 0) {
+                driveBreadcrumb = driveBreadcrumb.slice(0, existingIdx + 1);
+            } else {
+                driveBreadcrumb.push({ id: folderId, name: folderName });
+            }
+            renderBreadcrumb();
+            browseDrive(folderId);
+        }
+
+        function renderBreadcrumb() {
+            const nav = document.getElementById('drive-breadcrumb');
+            nav.innerHTML = '';
+            driveBreadcrumb.forEach((crumb, i) => {
+                if (i > 0) {
+                    const sep = document.createElement('span');
+                    sep.className = 'text-[var(--sh-text-3)] mx-0.5';
+                    sep.textContent = '/';
+                    nav.appendChild(sep);
+                }
+                const btn = document.createElement('button');
+                btn.className = 'bg-transparent border-none p-0 cursor-pointer transition-colors font-mono text-xs '
+                    + (i === driveBreadcrumb.length - 1
+                        ? 'text-[var(--sh-text-1)]'
+                        : 'text-[var(--sh-text-3)] hover:text-[var(--sh-blue)]');
+                if (i === 0) {
+                    btn.innerHTML = '<i class="fa-solid fa-hard-drive mr-0.5"></i>' + escHtml(crumb.name);
+                } else {
+                    btn.textContent = crumb.name;
+                }
+                btn.onclick = () => navigateToFolder(crumb.id, crumb.name);
+                nav.appendChild(btn);
+            });
+        }
+
+        function confirmDriveFolder() {
+            const crumb = driveBreadcrumb[driveBreadcrumb.length - 1];
+            selectedFolderId = crumb.id;
+            selectedFolderName = crumb.name;
+            document.getElementById('btn-import-drive').disabled = false;
+
+            // Visual confirmation
+            const sel = document.getElementById('drive-selection');
+            sel.innerHTML = '<div class="flex items-center gap-2">'
+                + '<i class="fa-solid fa-circle-check text-[var(--sh-green)]"></i>'
+                + '<span class="font-mono text-sm text-[var(--sh-text-1)]">' + escHtml(selectedFolderName) + '</span>'
+                + '<span class="sh-badge-green text-[0.6rem]">' + currentFolderImages.length + ' imagen' + (currentFolderImages.length !== 1 ? 'es' : '') + ' — listo</span>'
+                + '</div>';
+        }
+
+        async function doDriveImport() {
+            const name = document.getElementById('pres-name').value.trim();
+            if (!name) { showError('drive-error', 'El nombre es requerido.'); return; }
+            if (!selectedFolderId) { showError('drive-error', 'Selecciona una carpeta de Drive.'); return; }
+            hideError('drive-error');
+            document.getElementById('btn-import-drive').disabled = true;
+            document.getElementById('drive-progress').classList.remove('hidden');
+
+            const params = new URLSearchParams({
+                name,
+                description: document.getElementById('pres-desc').value.trim(),
+                driveFolderId: selectedFolderId,
+                driveFolderName: selectedFolderName
+            });
+
+            try {
+                const res = await fetch('/api/presentations/create-from-drive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...csrfHeaders() },
+                    body: params
+                });
+                const data = await res.json();
+                document.getElementById('drive-progress').classList.add('hidden');
+                if (res.ok && data.success) {
+                    W.presentationId = data.presentationId;
+                    W.totalSlides = data.totalSlides || 0;
+                    persistPresentationIdInUrl();
+                    onUploadComplete();
+                } else {
+                    showError('drive-error', data.error || 'Error de importacion.');
+                    document.getElementById('btn-import-drive').disabled = false;
+                }
+            } catch (e) {
+                document.getElementById('drive-progress').classList.add('hidden');
+                showError('drive-error', 'Error de red.');
+                document.getElementById('btn-import-drive').disabled = false;
+            }
+        }
+
+        function onUploadComplete() {
+            document.getElementById('btn-next').disabled = false;
+            // Auto-advance after brief delay
+            setTimeout(() => nextStep(), 600);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        let repoTipTimer = null;
+        let notesTipTimer = null;
+        const repoTips = [
+            'Tip: usa nombres de slides descriptivos para facilitar la revisión posterior de notas.',
+            'Tip: puedes continuar al siguiente paso cuando el resumen técnico aparezca en verde.',
+            'Tip: si el servicio IA está iniciando, el sistema reintentará automáticamente.',
+            'Tip: agregar la URL del repo en este paso mejora mucho las notas del Paso 3.',
+            'Tip: después podrás editar y ajustar las notas generadas antes de presentar.'
+        ];
+        const notesTips = [
+            'Tip: cuando termine, revisa las notas del Paso 4 y ajusta frases clave a tu estilo.',
+            'Tip: usa las notas IA como guía, no como guion rígido; prioriza claridad para la audiencia.',
+            'Tip: si hay demos en vivo, anota checkpoints para volver rápido en caso de fallos.',
+            'Tip: al asignar participantes en el Paso 5, distribuye slides por tema para mayor fluidez.'
+        ];
+
+        function updateRepoAssistantPanel(statusText, progressPct, metaText) {
+            const status = document.getElementById('repo-status-text');
+            const fill = document.getElementById('repo-progress-fill');
+            const meta = document.getElementById('repo-meta-text');
+            if (status) status.textContent = statusText;
+            if (fill) fill.style.width = Math.max(8, Math.min(98, progressPct)) + '%';
+            if (meta) meta.textContent = metaText;
+        }
+
+        function startRepoAssistantPanel() {
+            const panel = document.getElementById('repo-progress');
+            const tipsPanel = document.getElementById('repo-tips-panel');
+            const tip = document.getElementById('repo-tip-text');
+            panel.classList.remove('hidden');
+            tipsPanel.classList.remove('hidden');
+            updateRepoAssistantPanel('Analizando estructura del repositorio...', 12, 'Preparando análisis...');
+            if (tip) tip.textContent = repoTips[0];
+            let tipIndex = 0;
+            if (repoTipTimer) clearInterval(repoTipTimer);
+            repoTipTimer = setInterval(() => {
+                tipIndex = (tipIndex + 1) % repoTips.length;
+                if (tip) tip.textContent = repoTips[tipIndex];
+            }, 6000);
+        }
+
+        function stopRepoAssistantPanel() {
+            const panel = document.getElementById('repo-progress');
+            const tipsPanel = document.getElementById('repo-tips-panel');
+            panel.classList.add('hidden');
+            tipsPanel.classList.add('hidden');
+            if (repoTipTimer) {
+                clearInterval(repoTipTimer);
+                repoTipTimer = null;
+            }
+        }
+
+        function updateNotesAssistantPanel(statusText, progressPct, metaText) {
+            const status = document.getElementById('notes-progress-text');
+            const fill = document.getElementById('notes-progress-bar');
+            const meta = document.getElementById('notes-meta-text');
+            if (status) status.textContent = statusText;
+            if (fill) fill.style.width = Math.max(5, Math.min(100, progressPct)) + '%';
+            if (meta) meta.textContent = metaText;
+        }
+
+        function startNotesAssistantPanel() {
+            const panel = document.getElementById('notes-progress');
+            const tip = document.getElementById('notes-tip-text');
+            panel.classList.remove('hidden');
+            updateNotesAssistantPanel('Iniciando pipeline IA...', 5, 'Preparando análisis visual y contextual...');
+            if (tip) tip.textContent = notesTips[0];
+            let tipIndex = 0;
+            if (notesTipTimer) clearInterval(notesTipTimer);
+            notesTipTimer = setInterval(() => {
+                tipIndex = (tipIndex + 1) % notesTips.length;
+                if (tip) tip.textContent = notesTips[tipIndex];
+            }, 7000);
+        }
+
+        function stopNotesAssistantPanel() {
+            if (notesTipTimer) {
+                clearInterval(notesTipTimer);
+                notesTipTimer = null;
+            }
+        }
+
+        function normalizeRepoUrl(rawValue) {
+            if (!rawValue) {
+                return '';
+            }
+            const trimmed = rawValue.trim();
+            if (!trimmed) {
+                return '';
+            }
+            if (/^https?:\/\//i.test(trimmed)) {
+                return trimmed;
+            }
+            return 'https://' + trimmed;
+        }
+
+        // ── STEP 2: Repo Analysis ──
+        async function analyzeRepo() {
+            const repoInput = document.getElementById('repo-url');
+            const repoUrl = normalizeRepoUrl(repoInput.value);
+            if (!repoUrl) { showError('repo-error', 'Ingresa una URL de repositorio.'); return; }
+            repoInput.value = repoUrl;
+            W.repoUrl = repoUrl;
+            hideError('repo-error');
+            document.getElementById('btn-analyze-repo').disabled = true;
+            startRepoAssistantPanel();
+            document.getElementById('repo-result').classList.add('hidden');
+
+            try {
+                let res = null;
+                let data = {};
+                const maxAttempts = 3;
+
+                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                    updateRepoAssistantPanel('Conectando con Gemini...', 25 + (attempt * 15), 'Intento ' + attempt + ' de ' + maxAttempts);
+                    res = await fetch('/api/ai/analyze-repo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
+                        body: JSON.stringify({ repoUrl })
+                    });
+
+                    data = await readJsonSafe(res);
+
+                    if (res.status !== 429) {
+                        break;
+                    }
+
+                    if (attempt < maxAttempts) {
+                        const waitSeconds = attempt * 4;
+                        updateRepoAssistantPanel(
+                            'Servicio IA iniciando en Render...',
+                            35 + (attempt * 10),
+                            'Reintentando en ' + waitSeconds + 's'
+                        );
+                        await sleep(waitSeconds * 1000);
+                    }
+                }
+
+                stopRepoAssistantPanel();
+                document.getElementById('btn-analyze-repo').disabled = false;
+                if (res.ok) {
+                    document.getElementById('repo-result').classList.remove('hidden');
+                    const summary = data.summary || data.language || 'Análisis completado';
+                    const parts = [];
+                    if (data.language) parts.push('Lenguaje: ' + data.language);
+                    if (data.framework) parts.push('Framework: ' + data.framework);
+                    if (data.technologies && data.technologies.length) parts.push('Tech: ' + data.technologies.join(', '));
+                    document.getElementById('repo-summary').textContent = parts.length ? parts.join(' | ') : summary;
+                } else {
+                    if (res.status === 429) {
+                        showError('repo-error', 'El servicio de IA está iniciando o saturado (429). Espera unos segundos e inténtalo de nuevo.');
+                    } else {
+                        showError('repo-error', data.error || 'Error analizando repositorio.');
+                    }
+                }
+            } catch (e) {
+                stopRepoAssistantPanel();
+                document.getElementById('btn-analyze-repo').disabled = false;
+                showError('repo-error', 'Error de conexion.');
+            }
+        }
+
+        // ── STEP 3: Generate Notes ──
+        async function generateNotes() {
+            if (!hasPresentationContext()) {
+                showError('notes-error', 'Primero crea/importa la presentación en el Paso 1.');
+                return;
+            }
+
+            const repoInput = document.getElementById('repo-url');
+            if (repoInput) {
+                const normalizedRepo = normalizeRepoUrl(repoInput.value);
+                if (normalizedRepo) {
+                    repoInput.value = normalizedRepo;
+                    W.repoUrl = normalizedRepo;
+                }
+            }
+
+            document.getElementById('btn-generate-notes').disabled = true;
+            startNotesAssistantPanel();
+            document.getElementById('notes-success').classList.add('hidden');
+            hideError('notes-error');
+
+            let fakePct = 5;
+            const fakeTimer = setInterval(() => {
+                if (fakePct < 90) {
+                    fakePct += Math.random() * 3;
+                    const slideEst = Math.floor((fakePct / 100) * W.totalSlides);
+                    updateNotesAssistantPanel(
+                        'Analizando slide ~' + (slideEst + 1) + ' de ' + W.totalSlides + '...',
+                        fakePct,
+                        'Gemini Vision + Gemini Repo + Groq en ejecución'
+                    );
+                }
+            }, 1500);
+
+            const params = new URLSearchParams();
+            if (W.repoUrl) params.append('repoUrl', W.repoUrl);
+
+            try {
+                const res = await fetch('/api/presentations/' + W.presentationId + '/generate-notes?' + params, { method: 'POST', headers: csrfHeaders() });
+                clearInterval(fakeTimer);
+                const data = await readJsonSafe(res);
+
+                updateNotesAssistantPanel('Completado!', 100, 'Notas listas para revisión en el Paso 4');
+                stopNotesAssistantPanel();
+
+                if (res.ok && data.success !== false) {
+                    W.notesGenerated = true;
+                    document.getElementById('notes-success').classList.remove('hidden');
+                    document.getElementById('notes-count').textContent =
+                        (data.notesGenerated || W.totalSlides) + ' notas generadas para ' + W.totalSlides + ' diapositivas.';
+                    document.getElementById('btn-generate-notes').disabled = false;
+                    document.getElementById('btn-generate-notes').innerHTML =
+                        '<i class="fa-solid fa-arrows-rotate mr-1"></i> Regenerar Notas';
+                } else {
+                    showError('notes-error', data.error || data.errorMessage || 'Error generando notas.');
+                    document.getElementById('btn-generate-notes').disabled = false;
+                }
+            } catch (e) {
+                clearInterval(fakeTimer);
+                stopNotesAssistantPanel();
+                showError('notes-error', 'Error de conexion: ' + e.message);
+                document.getElementById('btn-generate-notes').disabled = false;
+            }
+        }
+
+        // ── STEP 4: Load Notes Review ──
+        async function loadNotesReview() {
+            const container = document.getElementById('notes-review-container');
+            container.innerHTML = '<div class="text-center py-6 text-[var(--sh-text-3)] font-mono text-xs"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Cargando notas...</div>';
+
+            if (!hasPresentationContext()) {
+                container.innerHTML = '<div class="text-center py-6 text-[var(--sh-text-3)] font-mono text-xs">Primero crea/importa la presentación en el Paso 1.</div>';
+                return;
+            }
+
+            try {
+                // Load slides
+                const slidesRes = await fetch('/api/presentations/' + W.presentationId + '/slides');
+                if (slidesRes.redirected && slidesRes.url.includes('/auth/login')) {
+                    container.innerHTML = '<div class="text-center py-6 text-[var(--sh-text-3)] font-mono text-xs">Tu sesión expiró. Inicia sesión nuevamente.</div>';
+                    return;
+                }
+                const slidesPayload = slidesRes.ok ? await readJsonSafe(slidesRes) : {};
+                const slides = Array.isArray(slidesPayload)
+                    ? slidesPayload
+                    : (Array.isArray(slidesPayload.slides) ? slidesPayload.slides : []);
+
+                // Load notes
+                const notesRes = await fetch('/api/presentations/' + W.presentationId + '/notes');
+                if (notesRes.redirected && notesRes.url.includes('/auth/login')) {
+                    container.innerHTML = '<div class="text-center py-6 text-[var(--sh-text-3)] font-mono text-xs">Tu sesión expiró. Inicia sesión nuevamente.</div>';
+                    return;
+                }
+                const notesPayload = notesRes.ok ? await readJsonSafe(notesRes) : [];
+                const notes = Array.isArray(notesPayload) ? notesPayload : [];
+
+                if (slides.length === 0) {
+                    container.innerHTML = '<div class="text-center py-6 text-[var(--sh-text-3)] font-mono text-xs">No hay diapositivas.</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                slides.forEach(slide => {
+                    const note = notes.find(n => n.slideNumber === slide.number);
+                    const card = document.createElement('div');
+                    card.className = 'bg-[var(--sh-deep)] border border-[var(--sh-border)] rounded-tech p-4';
+
+                    let noteHtml = '<div class="text-[var(--sh-text-3)] text-xs font-mono italic">Sin notas para este slide.</div>';
+                    if (note) {
+                        const pointsHtml = (note.points || []).map(p => '<li>' + escHtml(p) + '</li>').join('');
+                        const kpHtml = (note.keyPhrases || []).map(kp => '<span class="key-phrase">' + escHtml(kp) + '</span>').join(' ');
+                        noteHtml = `
+                            <div class="note-card">
+                                <div class="font-semibold text-sm text-[var(--sh-text-1)] mb-2">${escHtml(note.title || '')}</div>
+                                <ul class="mb-2 pl-4 space-y-1 text-sm text-[var(--sh-text-2)]">${pointsHtml}</ul>
+                                <div class="flex flex-wrap gap-1">${kpHtml}</div>
+                                ${note.suggestedTime ? '<div class="text-[var(--sh-text-3)] text-xs font-mono mt-2">&#9201; ' + escHtml(note.suggestedTime) + '</div>' : ''}
+                            </div>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0">
+                                <img src="${slide.s3Url}" alt="Slide ${slide.number}"
+                                     class="w-[120px] h-[80px] object-cover rounded-tech border-2 border-[var(--sh-border)]" loading="lazy">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="sh-badge mb-2">Diapositiva ${slide.number}</span>
+                                ${noteHtml}
+                            </div>
+                        </div>`;
+                    container.appendChild(card);
+                });
+            } catch (e) {
+                container.innerHTML = '<div class="text-center py-6 text-[var(--sh-text-3)] font-mono text-xs">Error cargando notas.</div>';
+            }
+        }
+
+        // ── STEP 5: Participants ──
+        async function addParticipant() {
+            const input = document.getElementById('participant-name');
+            const name = input.value.trim();
+            if (!name) return;
+            hideError('participant-error');
+
+            try {
+                const res = await fetch('/api/presentations/' + W.presentationId + '/meeting/participants', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
+                    body: JSON.stringify({ displayName: name, presenter: true })
+                });
+                if (res.ok) {
+                    input.value = '';
+                    await refreshParticipants();
+                } else {
+                    const data = await readJsonSafe(res);
+                    showError('participant-error', data.error || 'No se pudo agregar el participante.');
+                }
+            } catch (e) {
+                showError('participant-error', 'Error de conexion.');
+            }
+        }
+
+        async function refreshParticipants() {
+            try {
+                const res = await fetch('/api/presentations/' + W.presentationId + '/meeting/participants');
+                W.participants = res.ok ? await res.json() : [];
+            } catch (e) { W.participants = []; }
+
+            const list = document.getElementById('participants-list');
+            if (W.participants.length === 0) {
+                list.innerHTML = '<div class="text-xs font-mono text-[var(--sh-text-3)]">Sin participantes aún.</div>';
+                return;
+            }
+            list.innerHTML = W.participants.map(p =>
+                '<div class="participant-item">' +
+                '<span class="text-sm text-[var(--sh-text-1)]">' + escHtml(p.displayName) + '</span>' +
+                '<span class="sh-badge text-[0.6rem]">' + (p.presenter ? 'Expositor' : 'Invitado') + '</span>' +
+                '</div>'
+            ).join('');
+        }
+
+        // ── STEP 6: Start Session ──
+        async function startSession() {
+            hideError('session-error');
+            try {
+                const res = await fetch('/api/presentations/' + W.presentationId + '/meeting/session/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...csrfHeaders() }
+                });
+                if (res.ok) {
+                    const session = await res.json();
+                    W.sessionStarted = true;
+                    document.getElementById('session-not-started').classList.add('hidden');
+                    document.getElementById('session-started').classList.remove('hidden');
+                    document.getElementById('session-qr').src =
+                        'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(session.joinUrl);
+                    document.getElementById('session-join-url').value = session.joinUrl || '';
+                } else {
+                    showError('session-error', 'No se pudo iniciar la sesión.');
+                }
+            } catch (e) {
+                showError('session-error', 'Error de conexion.');
+            }
+        }
+
+        function copyJoinUrl() {
+            const input = document.getElementById('session-join-url');
+            input.select();
+            navigator.clipboard.writeText(input.value);
+        }
+
+        // ── Helpers ──
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-2"></i>' + msg;
+            el.classList.remove('hidden');
+        }
+        function hideError(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        }
+
+        async function readJsonSafe(res) {
+            const raw = await res.text();
+            if (!raw) return {};
+            try {
+                return JSON.parse(raw);
+            } catch (_) {
+                return {};
+            }
+        }
+
+        function escHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // ── Init ──
+        (function init() {
+            restorePresentationIdFromUrl();
+            showImportTab('upload');
+            updateNavButtons();
+
+            // Participant enter key
+            document.getElementById('participant-name').addEventListener('keydown', e => {
+                if (e.key === 'Enter') addParticipant();
+            });
+
+            // Restore step from hash
+            const hash = window.location.hash;
+            if (hash && (hash.startsWith('#step-') || hash.startsWith('#step='))) {
+                const n = parseInt(hash.substring(6));
+                if (n >= 1 && n <= W.totalSteps) goToStep(n);
+            }
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="110" fill="#0d1117" />
+  
+  <g transform="translate(10, 10)">
+    <!-- Back slide (Secondary/Hover color) -->
+    <path d="M190 140 h190 a30 30 0 0 1 30 30 v140 a30 30 0 0 1-30 30 h-190 a30 30 0 0 1-30-30 v-140 a30 30 0 0 1 30-30 z" fill="none" stroke="#21293a" stroke-width="32" stroke-linejoin="round" />
+    
+    <!-- Front slide (Void background, Accent blue border) -->
+    <path d="M130 200 h190 a30 30 0 0 1 30 30 v140 a30 30 0 0 1-30 30 h-190 a30 30 0 0 1-30-30 v-140 a30 30 0 0 1 30-30 z" fill="#080b10" stroke="#58a6ff" stroke-width="32" stroke-linejoin="round" />
+    
+    <!-- Play arrow (Accent blue) -->
+    <path d="M195 260 l70 40 l-70 40 z" fill="#58a6ff" />
+  </g>
+</svg>

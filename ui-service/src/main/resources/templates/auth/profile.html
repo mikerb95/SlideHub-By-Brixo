@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SlideHub — Mi Perfil</title>
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+</head>
+
+<body class="sh bg-sh-deep antialiased min-h-screen">
+
+    <!-- ═══ Navigation ═══ -->
+    <nav class="sh-nav">
+        <div class="sh-nav-inner">
+            <div class="flex items-center gap-3">
+                <a th:href="@{/presenter}" class="flex items-center gap-3 no-underline text-[var(--sh-text-1)]">
+                    <img th:src="@{/images/logo.svg}" alt="SlideHub" class="h-6 w-6">
+                    <span class="font-brand text-lg tracking-tight">SlideHub</span>
+                </a>
+                <span class="sh-badge ml-1">PROFILE</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <a th:href="@{/presenter}" class="sh-btn sh-btn-ghost text-xs">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Back
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ Content ═══ -->
+    <main class="max-w-[540px] mx-auto px-4 pt-20 pb-12 sh-fade-in">
+
+        <!-- ── Identity Header ── -->
+        <div class="sh-card p-6 mb-4">
+            <div class="flex items-start justify-between mb-1">
+                <div>
+                    <div class="sh-label mb-2">SYSTEM_IDENTITY</div>
+                    <h1 class="font-brand text-2xl text-[var(--sh-text-1)]"
+                        th:text="${user?.username} ?: ${#authentication.name}">usuario</h1>
+                    <div class="font-mono text-sm text-[var(--sh-text-2)] mt-1"
+                         th:text="${user?.email}">email@ejemplo.com</div>
+                </div>
+                <span class="sh-badge-blue" th:text="${user?.role} ?: 'PRESENTER'">PRESENTER</span>
+            </div>
+        </div>
+
+        <!-- ── Email Verification ── -->
+        <div class="sh-card p-5 mb-4">
+            <div class="sh-label mb-3">EMAIL_STATUS</div>
+
+            <div class="flex items-center justify-between p-3 rounded-tech bg-[var(--sh-deep)] border border-[var(--sh-border)]">
+                <div class="flex items-center gap-3">
+                    <div class="sh-icon sh-icon-sm sh-icon-blue">
+                        <i class="fa-solid fa-envelope text-xs"></i>
+                    </div>
+                    <span class="text-sm text-[var(--sh-text-2)]" th:text="${user?.email}">correo</span>
+                </div>
+                <span th:if="${user?.emailVerified}" class="sh-badge-green">
+                    <i class="fa-solid fa-check text-[0.6rem]"></i> Verified
+                </span>
+                <span th:unless="${user?.emailVerified}" class="sh-badge">
+                    Pending
+                </span>
+            </div>
+        </div>
+
+        <!-- ── Linked Providers ── -->
+        <div class="sh-card p-5 mb-4">
+            <div class="sh-label mb-3">LINKED_PROVIDERS</div>
+
+            <div class="flex flex-col gap-3">
+                <!-- GitHub -->
+                <div class="flex items-center justify-between p-3 rounded-tech bg-[var(--sh-deep)] border border-[var(--sh-border)]">
+                    <div class="flex items-center gap-3">
+                        <div class="sh-icon sh-icon-sm" style="background: var(--sh-surface); color: var(--sh-text-1);">
+                            <i class="fa-brands fa-github text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-sm text-[var(--sh-text-1)]">GitHub</span>
+                            <span th:if="${githubLinked}"
+                                  class="font-mono text-xs text-[var(--sh-text-3)] ml-2"
+                                  th:text="'@' + ${user?.githubUsername}">@usuario</span>
+                        </div>
+                    </div>
+                    <span th:if="${githubLinked}" class="sh-badge-green">
+                        <i class="fa-solid fa-link text-[0.55rem]"></i> Linked
+                    </span>
+                    <a th:unless="${githubLinked}" href="/oauth2/authorization/github" class="sh-btn text-xs py-1 px-2.5">
+                        Link
+                    </a>
+                </div>
+
+                <!-- Google -->
+                <div class="flex items-center justify-between p-3 rounded-tech bg-[var(--sh-deep)] border border-[var(--sh-border)]">
+                    <div class="flex items-center gap-3">
+                        <div class="sh-icon sh-icon-sm" style="background: var(--sh-surface); color: var(--sh-text-1);">
+                            <i class="fa-brands fa-google text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-sm text-[var(--sh-text-1)]">Google</span>
+                            <span th:if="${googleLinked}"
+                                  class="font-mono text-xs text-[var(--sh-text-3)] ml-2"
+                                  th:text="${user?.googleEmail}">correo@gmail.com</span>
+                        </div>
+                    </div>
+                    <span th:if="${googleLinked}" class="sh-badge-green">
+                        <i class="fa-solid fa-link text-[0.55rem]"></i> Linked
+                    </span>
+                    <a th:unless="${googleLinked}" href="/oauth2/authorization/google" class="sh-btn text-xs py-1 px-2.5">
+                        Link
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Actions ── -->
+        <div class="flex items-center gap-3">
+            <a th:href="@{/presenter}" class="sh-btn text-xs">
+                <i class="fa-solid fa-arrow-left"></i>
+                Presenter
+            </a>
+            <form th:action="@{/auth/logout}" method="post" class="ml-auto">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}">
+                <button type="submit" class="sh-btn sh-btn-danger text-xs">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Sign_Out
+                </button>
+            </form>
+        </div>
+
+    </main>
+
+</body>
+
+</html>

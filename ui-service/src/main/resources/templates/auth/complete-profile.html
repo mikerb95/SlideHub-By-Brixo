@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SlideHub — Completar perfil</title>
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+</head>
+
+<body class="sh bg-sh-deep antialiased min-h-screen flex items-center justify-center px-4 py-8">
+
+    <div class="w-full max-w-[380px] sh-fade-in">
+
+        <!-- ── Logo + Label ── -->
+        <div class="text-center mb-8">
+            <h1 class="font-brand text-2xl text-[var(--sh-text-1)]">SlideHub</h1>
+            <div class="sh-label mt-1">COMPLETAR PERFIL</div>
+        </div>
+
+        <!-- ── Profile Card ── -->
+        <div class="sh-card p-6">
+
+            <p class="text-[var(--sh-text-2)] text-sm mb-5">
+                ¡Ya casi! Confirma tu nombre de usuario, correo y crea una contraseña para terminar de configurar tu
+                cuenta.
+            </p>
+
+            <!-- Alerts -->
+            <div th:if="${errorMessage}" class="sh-alert sh-alert-error mb-4">
+                <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                <span th:text="${errorMessage}">Error</span>
+            </div>
+
+            <!-- Complete Profile Form -->
+            <form method="post" th:action="@{/auth/complete-profile}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}">
+
+                <div class="mb-4">
+                    <label for="username" class="sh-input-label">Nombre de usuario</label>
+                    <input type="text" class="sh-input" id="username" name="username" autocomplete="username"
+                        placeholder="system_user" th:value="${user.username}" minlength="3" maxlength="50" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="email" class="sh-input-label">Correo electrónico</label>
+                    <input type="email" class="sh-input" id="email" name="email" autocomplete="email"
+                        placeholder="user@node.io" th:value="${user.email}" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="sh-input-label">Contraseña</label>
+                    <input type="password" class="sh-input" id="password" name="password" autocomplete="new-password"
+                        placeholder="Mínimo 8 caracteres" minlength="8" required>
+                </div>
+
+                <div class="mb-5">
+                    <label for="confirmPassword" class="sh-input-label">Confirmar contraseña</label>
+                    <input type="password" class="sh-input" id="confirmPassword" name="confirmPassword"
+                        autocomplete="new-password" placeholder="Repite la contraseña" minlength="8" required>
+                </div>
+
+                <button type="submit" class="sh-btn sh-btn-blue w-full justify-center">
+                    <i class="fa-solid fa-check"></i>
+                    Guardar perfil
+                </button>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>

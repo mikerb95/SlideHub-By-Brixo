@@ -1,0 +1,76 @@
+# Render Infrastructure as Code (IaC) Blueprint
+# Despliegue monolítico de SlideHub
+#
+# Uso:
+#   1. Sube este archivo al repo como render.yaml
+#   2. Render Dashboard → Blueprints → New from Blueprint
+#   3. Pega la URL del repo y despliega
+
+services:
+  - type: web
+    name: slidehub-service
+    plan: free
+    runtime: docker
+    region: oregon
+    dockerContext: .
+    dockerfilePath: slidehub-service/Dockerfile
+    autoDeploy: true
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: BASE_URL
+        value: https://slide.lat
+
+      # PostgreSQL (Aiven)
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_DRIVER
+        value: org.postgresql.Driver
+      - key: JPA_DIALECT
+        value: org.hibernate.dialect.PostgreSQLDialect
+
+      # Redis
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: "6379"
+
+      # MongoDB
+      - key: MONGODB_URI
+        sync: false
+
+      # OAuth2 GitHub
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+
+      # OAuth2 Google
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+      # IA
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama3-8b-8192
+
+      # Email
+      - key: RESEND_API_KEY
+        sync: false
+
+      # S3
+      - key: AWS_S3_BUCKET
+        value: slidehub-assets
+      - key: AWS_REGION
+        value: us-east-1
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+

@@ -1,0 +1,100 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+@page { margin: 1in; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.45; color: #111; }
+h1 { font-size: 22pt; margin: 0 0 0.35em 0; }
+h2 { font-size: 15pt; margin: 1.1em 0 0.35em 0; }
+h3 { font-size: 12pt; margin: 0.9em 0 0.25em 0; }
+p { margin: 0.15em 0 0.6em 0; }
+ul, ol { margin: 0.15em 0 0.8em 1.4em; }
+li { margin: 0.12em 0; }
+strong { font-weight: 700; }
+blockquote { margin: 0.6em 0; padding: 0.45em 0.75em; background: #f5f7fa; border-left: 4px solid #99a; }
+hr { border: none; border-top: 1px solid #999; margin: 1em 0; }
+.code { font-family: 'Courier New', monospace; }
+</style></head><body><h1>Migración a Monolito — Fase 0 (Bootstrap)</h1>
+<p>Fecha: 2026-04-03</p>
+<p>Rama: <span class="code">development</span></p>
+<h2>Objetivo</h2>
+<p>Crear la base técnica del monolito sin romper el repo existente, habilitando compilación independiente y arranque inicial sobre <span class="code">slidehub-monolith</span>.</p>
+<h2>Cambios realizados</h2>
+<h3>1) Nuevo módulo monolito</h3>
+<p>Se creó:</p>
+<ul>
+<li><span class="code">slidehub-monolith/pom.xml</span></li>
+</ul>
+<p>Incluye dependencias consolidadas para:</p>
+<ul>
+<li>Web MVC + Thymeleaf</li>
+<li>Security + OAuth2</li>
+<li>JPA + Flyway + PostgreSQL</li>
+<li>Redis + MongoDB</li>
+<li>WebClient (WebFlux)</li>
+<li>AWS S3 SDK v2</li>
+<li>Testing (<span class="code">spring-boot-starter-test</span>, <span class="code">spring-security-test</span>)</li>
+</ul>
+<h3>2) Integración al parent Maven</h3>
+<p>Se actualizó:</p>
+<ul>
+<li><span class="code">pom.xml</span> (raíz)</li>
+</ul>
+<p>Cambio:</p>
+<ul>
+<li>se añadió el módulo <span class="code">slidehub-monolith</span> al <span class="code">&lt;modules&gt;</span> del agregador.</li>
+</ul>
+<h3>3) Bootstrap de aplicación monolítica</h3>
+<p>Se creó:</p>
+<ul>
+<li><span class="code">slidehub-monolith/src/main/java/com/brixo/slidehub/monolith/SlideHubMonolithApplication.java</span></li>
+</ul>
+<p>Características:</p>
+<ul>
+<li><span class="code">@SpringBootApplication(scanBasePackages = &quot;com.brixo.slidehub&quot;)</span></li>
+<li><span class="code">@EnableScheduling</span></li>
+<li><span class="code">@EnableConfigurationProperties</span> para rate limit</li>
+</ul>
+<h3>4) Port inicial de rate limiting (desde gateway)</h3>
+<p>Se crearon:</p>
+<ul>
+<li><span class="code">slidehub-monolith/src/main/java/com/brixo/slidehub/monolith/ratelimit/GatewayRateLimitDecision.java</span></li>
+<li><span class="code">slidehub-monolith/src/main/java/com/brixo/slidehub/monolith/ratelimit/GatewayRateLimitProperties.java</span></li>
+<li><span class="code">slidehub-monolith/src/main/java/com/brixo/slidehub/monolith/ratelimit/GatewayRateLimitService.java</span></li>
+<li><span class="code">slidehub-monolith/src/main/java/com/brixo/slidehub/monolith/ratelimit/GatewayRateLimitFilter.java</span></li>
+</ul>
+<p>Objetivo:</p>
+<ul>
+<li>conservar protección anti-abuso para endpoints sensibles de IA en arquitectura monolítica.</li>
+</ul>
+<h3>5) Configuración unificada base</h3>
+<p>Se creó:</p>
+<ul>
+<li><span class="code">slidehub-monolith/src/main/resources/application.properties</span></li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>puerto <span class="code">8080</span></li>
+<li>datasource/flyway</li>
+<li>redis/mongodb</li>
+<li>oauth2 github/google</li>
+<li>integración IA (Gemini/Groq)</li>
+<li>resend/s3</li>
+<li>reglas de rate limit portadas</li>
+<li>actuator health/info</li>
+</ul>
+<h2>Verificación</h2>
+<p>Compilación del nuevo módulo:</p>
+<p>```bash</p>
+<p>./mvnw clean compile -pl slidehub-monolith -am</p>
+<p>```</p>
+<p>Resultado esperado: <span class="code">BUILD SUCCESS</span>.</p>
+<h2>Resultado de fase</h2>
+<ul>
+<li>Módulo monolito creado y compilando.</li>
+<li>Base técnica lista para migrar dominios funcionales (<span class="code">state</span>, <span class="code">ai</span>, <span class="code">ui</span>).</li>
+<li>El monorepo mantiene servicios legacy sin bloquear la transición.</li>
+</ul>
+<h2>Próximo paso sugerido (Fase 1)</h2>
+<ol>
+<li>1. Migrar código de <span class="code">state-service</span>, <span class="code">ai-service</span> y <span class="code">ui-service</span> dentro de <span class="code">slidehub-monolith</span>.</li>
+<li>2. Copiar recursos <span class="code">templates</span>, <span class="code">static</span>, <span class="code">db/migration</span>.</li>
+<li>3. Mantener rutas públicas existentes para compatibilidad frontend.</li>
+</ol></body></html>

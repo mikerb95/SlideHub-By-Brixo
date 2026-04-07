@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SlideHub</title>
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+    <style>
+        /* Page-specific: hero grid line pattern */
+        .hero-grid {
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 64px 64px;
+        }
+        .hero-grid::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, transparent 50%, var(--sh-deep) 100%);
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="sh bg-sh-deep antialiased">
+
+    <!-- ═══════════════════════════════════
+         NAVIGATION — Glass Bar
+         ═══════════════════════════════════ -->
+    <nav class="sh-nav">
+        <div class="sh-nav-inner">
+            <div class="flex items-center gap-3">
+                <img th:src="@{/images/logo.svg}" alt="SlideHub" class="h-6 w-6">
+                <span class="font-brand text-lg tracking-tight">SlideHub</span>
+                <span class="hidden sm:inline-flex sh-badge ml-2">v1.0</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="sh-status hidden sm:inline-flex">
+                    <span class="sh-dot"></span>
+                    <span class="sh-label">4 NODES ACTIVE</span>
+                </div>
+                <a th:href="@{/auth/login}" class="sh-btn sh-btn-ghost text-xs">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    Sign_In
+                </a>
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- ═══════════════════════════════════
+         HERO
+         ═══════════════════════════════════ -->
+    <section class="min-h-screen flex items-center pt-12 relative hero-grid overflow-hidden">
+        <div class="max-w-6xl mx-auto px-6 w-full relative z-10">
+            <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
+                <!-- Left: Copy -->
+                <div class="sh-fade-in">
+                    <div class="sh-label mb-4">PRESENTATION_CONTROL_SYSTEM</div>
+                    <h1 class="font-brand text-5xl lg:text-6xl xl:text-7xl leading-[1.05] mb-6 text-[var(--sh-text-1)]">
+                        Layered<br>
+                        Architecture<br>
+                        <span class="text-[var(--sh-text-3)]">for Real-Time Slides</span>
+                    </h1>
+                    <p class="text-[var(--sh-text-2)] text-base lg:text-lg mb-8 max-w-md leading-relaxed">
+                        Multi-screen slide control with AI-generated presenter notes,
+                        haptic remote, and a microservices backbone built on Spring Boot 4.
+                    </p>
+
+                    <!-- CTA Buttons -->
+                    <div class="flex gap-3 flex-wrap mb-8">
+                        <a th:href="@{/slides}" class="sh-btn sh-btn-primary sh-btn-lg">
+                            <i class="fa-solid fa-display"></i>
+                            Projector_View
+                        </a>
+                        <a th:href="@{/remote}" class="sh-btn sh-btn-lg">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
+                            Remote_Control
+                        </a>
+                        <a th:href="@{/auth/login}" class="sh-btn sh-btn-lg">
+                            <i class="fa-solid fa-user-lock"></i>
+                            Presenter_Mode
+                        </a>
+                    </div>
+
+                    <!-- Tech Badges -->
+                    <div class="flex gap-2 flex-wrap">
+                        <span class="sh-badge">Spring Boot 4</span>
+                        <span class="sh-badge">Redis</span>
+                        <span class="sh-badge">MongoDB</span>
+                        <span class="sh-badge">PostgreSQL</span>
+                        <span class="sh-badge">Gemini Vision</span>
+                        <span class="sh-badge">Groq</span>
+                        <span class="sh-badge">S3</span>
+                    </div>
+                </div>
+
+                <!-- Right: Layered Architecture Visual -->
+                <div class="hidden lg:flex items-center justify-center sh-fade-in" style="animation-delay: 0.15s">
+                    <div class="sh-layers">
+                        <!-- Layer 4 — AI Service (back) -->
+                        <div class="sh-layer sh-layer-4">
+                            <div class="sh-label p-3 opacity-40">AI_SERVICE</div>
+                            <div class="absolute bottom-2 right-3 font-mono text-[0.6rem] text-[var(--sh-text-3)] opacity-40">:8083</div>
+                        </div>
+                        <!-- Layer 3 — State Service -->
+                        <div class="sh-layer sh-layer-3">
+                            <div class="sh-label p-3 opacity-50">STATE_SERVICE</div>
+                            <div class="absolute bottom-2 right-3 font-mono text-[0.6rem] text-[var(--sh-text-3)] opacity-50">:8081</div>
+                        </div>
+                        <!-- Layer 2 — UI Service -->
+                        <div class="sh-layer sh-layer-2">
+                            <div class="sh-label p-3 opacity-70">UI_SERVICE</div>
+                            <div class="absolute bottom-2 right-3 font-mono text-[0.6rem] text-[var(--sh-text-3)] opacity-70">:8082</div>
+                        </div>
+                        <!-- Layer 1 — Gateway (front) -->
+                        <div class="sh-layer sh-layer-1">
+                            <div class="sh-label p-3">GATEWAY</div>
+                            <div class="absolute bottom-3 left-3 sh-status">
+                                <span class="sh-dot"></span>
+                                <span class="sh-label text-[var(--sh-green)]">ROUTING</span>
+                            </div>
+                            <div class="absolute bottom-2 right-3 font-mono text-[0.6rem] text-[var(--sh-text-3)]">:8080</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════
+         SYSTEM TOPOLOGY — Node Map
+         ═══════════════════════════════════ -->
+    <section class="py-20 lg:py-28">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="sh-label mb-3">SYSTEM_TOPOLOGY</div>
+            <h2 class="font-brand text-3xl lg:text-4xl mb-4 text-[var(--sh-text-1)]">Node Map</h2>
+            <p class="text-[var(--sh-text-2)] text-sm mb-12 max-w-lg">
+                Four microservices communicate through a centralized gateway.
+                Each node runs independently on its designated port.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sh-stagger">
+                <!-- Gateway Node -->
+                <div class="sh-card sh-gradient-border p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="sh-label">GATEWAY</span>
+                        <div class="sh-status">
+                            <span class="sh-dot"></span>
+                            <span class="font-mono text-xs text-accent-green">:8080</span>
+                        </div>
+                    </div>
+                    <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">Gateway Service</h4>
+                    <p class="text-sm text-[var(--sh-text-2)] mb-4">
+                        Spring Cloud Gateway — routing, config server, forwarded headers.
+                    </p>
+                    <div class="flex gap-1.5 flex-wrap">
+                        <span class="sh-badge text-[0.6rem]">WebMVC</span>
+                        <span class="sh-badge text-[0.6rem]">Config</span>
+                        <span class="sh-badge text-[0.6rem]">Routes</span>
+                    </div>
+                </div>
+
+                <!-- State Node -->
+                <div class="sh-card sh-gradient-border p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="sh-label">STATE</span>
+                        <div class="sh-status">
+                            <span class="sh-dot"></span>
+                            <span class="font-mono text-xs text-accent-green">:8081</span>
+                        </div>
+                    </div>
+                    <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">State Service</h4>
+                    <p class="text-sm text-[var(--sh-text-2)] mb-4">
+                        Redis-backed slide state, demo mode, haptic events.
+                    </p>
+                    <div class="flex gap-1.5 flex-wrap">
+                        <span class="sh-badge text-[0.6rem]">Redis</span>
+                        <span class="sh-badge text-[0.6rem]">REST</span>
+                        <span class="sh-badge text-[0.6rem]">SSE</span>
+                    </div>
+                </div>
+
+                <!-- UI Node -->
+                <div class="sh-card sh-gradient-border p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="sh-label">INTERFACE</span>
+                        <div class="sh-status">
+                            <span class="sh-dot"></span>
+                            <span class="font-mono text-xs text-accent-green">:8082</span>
+                        </div>
+                    </div>
+                    <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">UI Service</h4>
+                    <p class="text-sm text-[var(--sh-text-2)] mb-4">
+                        Thymeleaf views, auth, OAuth2, S3 uploads, email.
+                    </p>
+                    <div class="flex gap-1.5 flex-wrap">
+                        <span class="sh-badge text-[0.6rem]">JPA</span>
+                        <span class="sh-badge text-[0.6rem]">OAuth2</span>
+                        <span class="sh-badge text-[0.6rem]">S3</span>
+                        <span class="sh-badge text-[0.6rem]">Resend</span>
+                    </div>
+                </div>
+
+                <!-- AI Node -->
+                <div class="sh-card sh-gradient-border p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="sh-label">INTELLIGENCE</span>
+                        <div class="sh-status">
+                            <span class="sh-dot"></span>
+                            <span class="font-mono text-xs text-accent-green">:8083</span>
+                        </div>
+                    </div>
+                    <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">AI Service</h4>
+                    <p class="text-sm text-[var(--sh-text-2)] mb-4">
+                        Gemini vision, Groq generation, deploy tutor, MongoDB.
+                    </p>
+                    <div class="flex gap-1.5 flex-wrap">
+                        <span class="sh-badge text-[0.6rem]">Gemini</span>
+                        <span class="sh-badge text-[0.6rem]">Groq</span>
+                        <span class="sh-badge text-[0.6rem]">Mongo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════
+         FEATURES — Bento Grid
+         ═══════════════════════════════════ -->
+    <section class="py-20 lg:py-28 border-t" style="border-color: var(--sh-border);">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="sh-label mb-3">CAPABILITIES</div>
+            <h2 class="font-brand text-3xl lg:text-4xl mb-4 text-[var(--sh-text-1)]">Feature Matrix</h2>
+            <p class="text-[var(--sh-text-2)] text-sm mb-12 max-w-lg">
+                Each capability is a discrete module within the layered architecture,
+                designed for independent operation and composability.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sh-stagger">
+
+                <!-- SYNC — spans 2 cols -->
+                <div class="sh-card p-6 lg:col-span-2">
+                    <div class="flex items-start gap-4">
+                        <div class="sh-icon sh-icon-lg sh-icon-green">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </div>
+                        <div>
+                            <div class="sh-label mb-1">SYNC_PROTOCOL</div>
+                            <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">Multi-Screen Synchronization</h4>
+                            <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                                Projector, demo, presenter, and remote views — all synchronized in real-time
+                                via HTTP polling through the gateway. Slide state lives in Redis with
+                                sub-second propagation.
+                            </p>
+                            <div class="mt-4 font-mono text-xs text-[var(--sh-text-3)]">
+                                poll_interval: 1000ms &middot; protocol: HTTP/REST &middot; store: Redis &middot; views: 5
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HAPTIC REMOTE -->
+                <div class="sh-card p-6">
+                    <div class="sh-icon sh-icon-lg sh-icon-blue mb-4">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </div>
+                    <div class="sh-label mb-1">HAPTIC_REMOTE</div>
+                    <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">Touch Remote</h4>
+                    <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                        Swipe navigation with vibration feedback. Push-to-talk voice assistant
+                        via Groq Whisper transcription.
+                    </p>
+                    <div class="mt-3 font-mono text-xs text-[var(--sh-text-3)]">
+                        input: swipe + voice &middot; haptic: vibration API
+                    </div>
+                </div>
+
+                <!-- AI NOTES -->
+                <div class="sh-card p-6">
+                    <div class="sh-icon sh-icon-lg sh-icon-amber mb-4">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <div class="sh-label mb-1">AI_PIPELINE</div>
+                    <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">AI Notes</h4>
+                    <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                        Gemini Vision analyzes slide PNGs. Groq generates structured
+                        presenter notes with key phrases and demo tags.
+                    </p>
+                    <div class="mt-3 font-mono text-xs text-[var(--sh-text-3)]">
+                        vision: Gemini &middot; gen: Groq &middot; store: MongoDB
+                    </div>
+                </div>
+
+                <!-- DEMO MODE -->
+                <div class="sh-card p-6">
+                    <div class="sh-icon sh-icon-lg sh-icon-red mb-4">
+                        <i class="fa-solid fa-display"></i>
+                    </div>
+                    <div class="sh-label mb-1">DUAL_MODE</div>
+                    <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">Demo Mode</h4>
+                    <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                        Switch between slides and live URL iframes from the master panel.
+                        Return-slide memory preserves context.
+                    </p>
+                    <div class="mt-3 font-mono text-xs text-[var(--sh-text-3)]">
+                        modes: "slides" | "url" &middot; returnSlide: auto
+                    </div>
+                </div>
+
+                <!-- MASTER PANEL — spans 2 cols -->
+                <div class="sh-card p-6 lg:col-span-2">
+                    <div class="flex items-start gap-4">
+                        <div class="sh-icon sh-icon-lg sh-icon-blue">
+                            <i class="fa-solid fa-table-cells-large"></i>
+                        </div>
+                        <div>
+                            <div class="sh-label mb-1">CONTROL_SURFACE</div>
+                            <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">Master Panel</h4>
+                            <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                                Tablet-optimized grid with slide thumbnails, meeting session management,
+                                participant assignments with haptic feedback, and a quick-action sidebar.
+                            </p>
+                            <div class="mt-4 font-mono text-xs text-[var(--sh-text-3)]">
+                                viewport: 11" tablet &middot; grid: auto-fill 160px &middot; auth: PRESENTER | ADMIN
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DEPLOY TUTOR -->
+                <div class="sh-card p-6">
+                    <div class="sh-icon sh-icon-lg sh-icon-green mb-4">
+                        <i class="fa-solid fa-rocket"></i>
+                    </div>
+                    <div class="sh-label mb-1">DEPLOY_TUTOR</div>
+                    <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">Deploy Guide</h4>
+                    <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                        AI-generated Dockerfiles and deployment guides for Render,
+                        Vercel, and Netlify. Cached in MongoDB.
+                    </p>
+                    <div class="mt-3 font-mono text-xs text-[var(--sh-text-3)]">
+                        platforms: 3 &middot; cache: MongoDB &middot; temp: 0.4
+                    </div>
+                </div>
+
+                <!-- MEETINGS / QR -->
+                <div class="sh-card p-6">
+                    <div class="sh-icon sh-icon-lg sh-icon-blue mb-4">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div class="sh-label mb-1">MEETING_SESSION</div>
+                    <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">QR Meetings</h4>
+                    <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                        Join tokens via QR code. Participant assignments per slide
+                        with real-time feedback channel.
+                    </p>
+                    <div class="mt-3 font-mono text-xs text-[var(--sh-text-3)]">
+                        auth: joinToken + participantToken
+                    </div>
+                </div>
+
+                <!-- GOOGLE DRIVE -->
+                <div class="sh-card p-6">
+                    <div class="sh-icon sh-icon-lg sh-icon-amber mb-4">
+                        <i class="fa-brands fa-google-drive"></i>
+                    </div>
+                    <div class="sh-label mb-1">DRIVE_IMPORT</div>
+                    <h4 class="font-brand text-xl mb-2 text-[var(--sh-text-1)]">Google Drive</h4>
+                    <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                        Import presentations directly from Google Drive folders.
+                        REST API v3 via WebClient, no SDK.
+                    </p>
+                    <div class="mt-3 font-mono text-xs text-[var(--sh-text-3)]">
+                        api: Drive REST v3 &middot; auth: OAuth2
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════
+         METRICS — System Overview
+         ═══════════════════════════════════ -->
+    <section class="py-20 lg:py-28 border-t" style="border-color: var(--sh-border);">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="sh-label mb-3">SYSTEM_METRICS</div>
+            <h2 class="font-brand text-3xl lg:text-4xl mb-12 text-[var(--sh-text-1)]">By the Numbers</h2>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sh-stagger">
+                <div class="sh-metric">
+                    <div class="sh-metric-value text-accent-green">4</div>
+                    <div class="sh-metric-label">MICROSERVICES</div>
+                </div>
+                <div class="sh-metric">
+                    <div class="sh-metric-value text-accent-blue">5</div>
+                    <div class="sh-metric-label">CLIENT_VIEWS</div>
+                </div>
+                <div class="sh-metric">
+                    <div class="sh-metric-value text-accent-amber">2</div>
+                    <div class="sh-metric-label">AI_ENGINES</div>
+                </div>
+                <div class="sh-metric">
+                    <div class="sh-metric-value text-accent-green">3</div>
+                    <div class="sh-metric-label">DATABASES</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════
+         TECH STACK
+         ═══════════════════════════════════ -->
+    <section class="py-20 lg:py-28 border-t" style="border-color: var(--sh-border);">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="sh-label mb-3">DEPENDENCY_GRAPH</div>
+            <h2 class="font-brand text-3xl lg:text-4xl mb-12 text-[var(--sh-text-1)]">Stack</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Runtime -->
+                <div>
+                    <div class="sh-label mb-4 text-accent-green">RUNTIME</div>
+                    <div class="flex flex-col gap-2">
+                        <div class="sh-card p-3 flex items-center gap-3">
+                            <i class="fa-brands fa-java text-accent-blue text-lg w-5 text-center"></i>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--sh-text-1)]">Java 21</div>
+                                <div class="font-mono text-[0.65rem] text-[var(--sh-text-3)]">LTS · Virtual Threads</div>
+                            </div>
+                        </div>
+                        <div class="sh-card p-3 flex items-center gap-3">
+                            <i class="fa-solid fa-leaf text-accent-green text-sm w-5 text-center"></i>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--sh-text-1)]">Spring Boot 4.0.3</div>
+                                <div class="font-mono text-[0.65rem] text-[var(--sh-text-3)]">Cloud 2025.1.0</div>
+                            </div>
+                        </div>
+                        <div class="sh-card p-3 flex items-center gap-3">
+                            <i class="fa-solid fa-cloud text-accent-blue text-sm w-5 text-center"></i>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--sh-text-1)]">Spring Cloud Gateway</div>
+                                <div class="font-mono text-[0.65rem] text-[var(--sh-text-3)]">WebMVC mode</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data -->
+                <div>
+                    <div class="sh-label mb-4 text-accent-blue">DATA_LAYER</div>
+                    <div class="flex flex-col gap-2">
+                        <div class="sh-card p-3 flex items-center gap-3">
+                            <i class="fa-solid fa-bolt text-accent-red text-sm w-5 text-center"></i>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--sh-text-1)]">Redis</div>
+                                <div class="font-mono text-[0.65rem] text-[var(--sh-text-3)]">State + haptic events</div>
+                            </div>
+                        </div>
+                        <div class="sh-card p-3 flex items-center gap-3">
+                            <i class="fa-solid fa-database text-accent-blue text-sm w-5 text-center"></i>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--sh-text-1)]">PostgreSQL</div>
+                                <div class="font-mono text-[0.65rem] text-[var(--sh-text-3)]">Aiven · Users, presentations</div>
+                            </div>
+                        </div>
+                        <div class="sh-card p-3 flex items-center gap-3">
+                            <i class="fa-solid fa-cubes text-accent-green text-sm w-5 text-center"></i>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--sh-text-1)]">MongoDB</div>
+                                <div class="font-mono text-[0.65rem] text-[var(--sh-text-3)]">AI notes + deploy guides</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Integrations -->
+                <div>
+                    <div class="sh-label mb-4 text-accent-amber">INTEGRATIONS</div>
+                    <div class="flex flex-col gap-2">
+                        <div class="sh-card p-3 flex items-center gap-3">
+                            <i class="fa-solid fa-eye text-accent-amber text-sm w-5 text-center"></i>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--sh-text-1)]">Gemini Vision</div>
+                                <div class="font-mono text-[0.65rem] text-[var(--sh-text-3)]">Slide analysis · WebClient</div>
+                            </div>
+                        </div>
+                        <div class="sh-card p-3 flex items-center gap-3">
+                            <i class="fa-solid fa-robot text-accent-green text-sm w-5 text-center"></i>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--sh-text-1)]">Groq</div>
+                                <div class="font-mono text-[0.65rem] text-[var(--sh-text-3)]">Note gen + Whisper STT</div>
+                            </div>
+                        </div>
+                        <div class="sh-card p-3 flex items-center gap-3">
+                            <i class="fa-brands fa-aws text-accent-amber text-sm w-5 text-center"></i>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--sh-text-1)]">Amazon S3</div>
+                                <div class="font-mono text-[0.65rem] text-[var(--sh-text-3)]">User assets · SDK v2</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════
+         FOOTER
+         ═══════════════════════════════════ -->
+    <footer class="py-8 border-t" style="border-color: var(--sh-border);">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <img th:src="@{/images/logo.svg}" alt="" class="h-5 w-5 opacity-30">
+                <span class="font-brand text-sm text-[var(--sh-text-3)]">SlideHub</span>
+            </div>
+            <div class="font-mono text-xs text-[var(--sh-text-3)]">
+                v1.0 &middot; Spring Boot 4.0.3 &middot; Java 21 &middot; Render
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

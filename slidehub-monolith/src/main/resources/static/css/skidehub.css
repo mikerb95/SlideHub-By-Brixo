@@ -1,0 +1,1093 @@
+/* ═══════════════════════════════════════════════════════════════
+   SLIDEHUB DESIGN SYSTEM — "Layered Architecture"
+   Technical Glass Aesthetic · v1.0
+
+   Inspired by Linear, Vercel, Raycast.
+   Every element should feel like a software engineering module.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ═══════════════════════════════════════
+   1. DESIGN TOKENS (CSS Custom Properties)
+   ═══════════════════════════════════════ */
+
+:root {
+    /* ── Depth Surfaces (dark → light) ── */
+    --sh-void: #080b10;
+    --sh-deep: #0d1117;
+    --sh-surface: #111820;
+    --sh-card: #151b23;
+    --sh-elevated: #1c2333;
+    --sh-hover: #21293a;
+
+    /* ── Borders ── */
+    --sh-border: rgba(255, 255, 255, 0.06);
+    --sh-border-subtle: rgba(255, 255, 255, 0.04);
+    --sh-border-active: rgba(255, 255, 255, 0.12);
+    --sh-border-focus: rgba(88, 166, 255, 0.4);
+
+    /* ── Text Hierarchy ── */
+    --sh-text-1: #e6edf3;
+    /* primary   */
+    --sh-text-2: #8b949e;
+    /* secondary */
+    --sh-text-3: #484f58;
+    /* muted     */
+
+    /* ── Signal Colors ── */
+    --sh-green: #3fb950;
+    --sh-green-bright: #56d364;
+    --sh-green-dim: rgba(63, 185, 80, 0.12);
+    --sh-blue: #58a6ff;
+    --sh-blue-bright: #79c0ff;
+    --sh-blue-dim: rgba(88, 166, 255, 0.12);
+    --sh-amber: #d29922;
+    --sh-amber-dim: rgba(210, 153, 34, 0.12);
+    --sh-red: #f85149;
+    --sh-red-dim: rgba(248, 81, 73, 0.12);
+
+    /* ── Typography ── */
+    --sh-font-brand: 'Instrument Serif', Georgia, serif;
+    --sh-font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --sh-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* ── Radii (technical, not playful) ── */
+    --sh-r-xs: 2px;
+    --sh-r-sm: 3px;
+    --sh-r-md: 4px;
+    --sh-r-lg: 6px;
+
+    /* ── Glass ── */
+    --sh-glass-bg: rgba(13, 17, 23, 0.72);
+    --sh-glass-blur: 12px;
+
+    /* ── Shadows ── */
+    --sh-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --sh-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --sh-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    /* ── Transitions ── */
+    --sh-t-fast: 120ms ease;
+    --sh-t-base: 200ms ease;
+    --sh-t-slow: 350ms ease;
+}
+
+
+/* ═══════════════════════════════════════
+   2. BASE / RESET
+   ═══════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body.sh {
+    margin: 0;
+    background: var(--sh-deep);
+    color: var(--sh-text-1);
+    font-family: var(--sh-font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    color: inherit;
+}
+
+
+/* ═══════════════════════════════════════
+   3. TYPOGRAPHY
+   ═══════════════════════════════════════ */
+
+/* Brand — Instrument Serif for headings and identity */
+.sh-brand {
+    font-family: var(--sh-font-brand);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+}
+
+/* Monospace — JetBrains Mono for labels, metrics, data */
+.sh-mono {
+    font-family: var(--sh-font-mono);
+    font-size: 0.85em;
+    letter-spacing: -0.02em;
+}
+
+/* Label — uppercase monospace for section tags and status */
+.sh-label {
+    font-family: var(--sh-font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sh-text-3);
+}
+
+
+/* ═══════════════════════════════════════
+   4. GLASS PANEL
+   ═══════════════════════════════════════ */
+
+.sh-glass {
+    background: var(--sh-glass-bg);
+    backdrop-filter: blur(var(--sh-glass-blur));
+    -webkit-backdrop-filter: blur(var(--sh-glass-blur));
+    border: 1px solid var(--sh-border);
+}
+
+
+/* ═══════════════════════════════════════
+   5. CARD
+   ═══════════════════════════════════════ */
+
+.sh-card {
+    background: var(--sh-card);
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-r-md);
+    transition: border-color var(--sh-t-base), box-shadow var(--sh-t-base);
+}
+
+.sh-card:hover {
+    border-color: var(--sh-border-active);
+}
+
+.sh-card-elevated {
+    background: var(--sh-elevated);
+    border: 1px solid var(--sh-border-active);
+    border-radius: var(--sh-r-md);
+}
+
+
+/* ═══════════════════════════════════════
+   6. BUTTONS
+   ═══════════════════════════════════════ */
+
+.sh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-family: var(--sh-font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    border-radius: var(--sh-r-md);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-card);
+    color: var(--sh-text-1);
+    cursor: pointer;
+    transition: all var(--sh-t-fast);
+    text-decoration: none;
+    line-height: 1.4;
+}
+
+.sh-btn:hover {
+    background: var(--sh-elevated);
+    border-color: var(--sh-border-active);
+    color: var(--sh-text-1);
+    text-decoration: none;
+}
+
+/* Primary — node green */
+.sh-btn-primary {
+    background: var(--sh-green);
+    border-color: var(--sh-green);
+    color: var(--sh-deep);
+    font-weight: 600;
+}
+
+.sh-btn-primary:hover {
+    background: var(--sh-green-bright);
+    border-color: var(--sh-green-bright);
+    color: var(--sh-deep);
+    box-shadow: 0 0 12px rgba(63, 185, 80, 0.3);
+}
+
+/* Ghost — transparent until hover */
+.sh-btn-ghost {
+    background: transparent;
+    border-color: transparent;
+}
+
+.sh-btn-ghost:hover {
+    background: var(--sh-hover);
+    border-color: var(--sh-border);
+}
+
+/* Signal Blue */
+.sh-btn-blue {
+    background: var(--sh-blue-dim);
+    border-color: rgba(88, 166, 255, 0.2);
+    color: var(--sh-blue);
+}
+
+.sh-btn-blue:hover {
+    background: rgba(88, 166, 255, 0.18);
+    border-color: rgba(88, 166, 255, 0.3);
+    box-shadow: 0 0 12px rgba(88, 166, 255, 0.15);
+}
+
+/* Danger */
+.sh-btn-danger {
+    background: var(--sh-red-dim);
+    border-color: rgba(248, 81, 73, 0.2);
+    color: var(--sh-red);
+}
+
+.sh-btn-danger:hover {
+    background: rgba(248, 81, 73, 0.18);
+    border-color: rgba(248, 81, 73, 0.3);
+}
+
+/* Large variant */
+.sh-btn-lg {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.85rem;
+}
+
+
+/* ═══════════════════════════════════════
+   7. BADGES / PILLS
+   ═══════════════════════════════════════ */
+
+.sh-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    font-family: var(--sh-font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    border-radius: var(--sh-r-sm);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-surface);
+    color: var(--sh-text-2);
+}
+
+.sh-badge-green {
+    background: var(--sh-green-dim);
+    border-color: rgba(63, 185, 80, 0.2);
+    color: var(--sh-green);
+}
+
+.sh-badge-blue {
+    background: var(--sh-blue-dim);
+    border-color: rgba(88, 166, 255, 0.2);
+    color: var(--sh-blue);
+}
+
+.sh-badge-amber {
+    background: var(--sh-amber-dim);
+    border-color: rgba(210, 153, 34, 0.2);
+    color: var(--sh-amber);
+}
+
+.sh-badge-red {
+    background: var(--sh-red-dim);
+    border-color: rgba(248, 81, 73, 0.2);
+    color: var(--sh-red);
+}
+
+
+/* ═══════════════════════════════════════
+   8. STATUS INDICATORS
+   ═══════════════════════════════════════ */
+
+.sh-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Dot — 6px circle with animated ping ring */
+.sh-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sh-green);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.sh-dot::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: var(--sh-green);
+    opacity: 0;
+    animation: sh-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.sh-dot--idle {
+    background: var(--sh-text-3);
+}
+
+.sh-dot--idle::after {
+    display: none;
+}
+
+.sh-dot--warn {
+    background: var(--sh-amber);
+}
+
+.sh-dot--warn::after {
+    background: var(--sh-amber);
+}
+
+.sh-dot--error {
+    background: var(--sh-red);
+}
+
+.sh-dot--error::after {
+    background: var(--sh-red);
+}
+
+.sh-dot--blue {
+    background: var(--sh-blue);
+}
+
+.sh-dot--blue::after {
+    background: var(--sh-blue);
+}
+
+
+/* ═══════════════════════════════════════
+   9. FORM ELEMENTS
+   ═══════════════════════════════════════ */
+
+.sh-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-family: var(--sh-font-body);
+    font-size: 0.875rem;
+    color: var(--sh-text-1);
+    background: var(--sh-deep);
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-r-md);
+    outline: none;
+    transition: border-color var(--sh-t-fast), box-shadow var(--sh-t-fast), background-color var(--sh-t-fast);
+}
+
+.sh-input:hover {
+    border-color: var(--sh-border-focus);
+    background: var(--sh-surface);
+    box-shadow: 0 0 0 1px var(--sh-blue-dim), 0 0 16px rgba(88, 166, 255, 0.18);
+}
+
+.sh-input:focus {
+    border-color: var(--sh-blue);
+    box-shadow: 0 0 0 3px var(--sh-blue-dim);
+}
+
+.sh-input::placeholder {
+    color: var(--sh-text-3);
+}
+
+/* Password visibility toggle */
+.sh-password-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.sh-password-wrap .sh-password-input {
+    padding-right: 2.6rem;
+}
+
+.sh-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.45rem;
+    transform: translateY(-50%);
+    border: 1px solid var(--sh-border-subtle);
+    background: var(--sh-surface);
+    color: var(--sh-text-2);
+    border-radius: var(--sh-r-sm);
+    width: 1.9rem;
+    height: 1.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color var(--sh-t-fast), color var(--sh-t-fast), background var(--sh-t-fast);
+}
+
+.sh-password-toggle:hover {
+    border-color: var(--sh-border-focus);
+    color: var(--sh-blue);
+    background: var(--sh-elevated);
+}
+
+.sh-password-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--sh-blue-dim);
+}
+
+.sh-input-label {
+    display: block;
+    font-family: var(--sh-font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--sh-text-2);
+    margin-bottom: 0.4rem;
+}
+
+/* Select */
+.sh-select {
+    appearance: none;
+    width: 100%;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    font-family: var(--sh-font-body);
+    font-size: 0.875rem;
+    color: var(--sh-text-1);
+    background: var(--sh-deep) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23484f58' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E") no-repeat right 0.75rem center;
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-r-md);
+    outline: none;
+    cursor: pointer;
+    transition: border-color var(--sh-t-fast), box-shadow var(--sh-t-fast);
+}
+
+.sh-select:focus {
+    border-color: var(--sh-blue);
+    box-shadow: 0 0 0 3px var(--sh-blue-dim);
+}
+
+/* Textarea */
+.sh-textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-family: var(--sh-font-body);
+    font-size: 0.875rem;
+    color: var(--sh-text-1);
+    background: var(--sh-deep);
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-r-md);
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color var(--sh-t-fast), box-shadow var(--sh-t-fast), background-color var(--sh-t-fast);
+}
+
+.sh-textarea:hover {
+    border-color: var(--sh-border-focus);
+    background: var(--sh-surface);
+    box-shadow: 0 0 0 1px var(--sh-blue-dim), 0 0 16px rgba(88, 166, 255, 0.18);
+}
+
+.sh-textarea:focus {
+    border-color: var(--sh-blue);
+    box-shadow: 0 0 0 3px var(--sh-blue-dim);
+}
+
+
+/* ═══════════════════════════════════════
+   10. DIVIDERS
+   ═══════════════════════════════════════ */
+
+.sh-divider {
+    height: 1px;
+    background: var(--sh-border);
+    border: none;
+    margin: 1.5rem 0;
+}
+
+
+/* ═══════════════════════════════════════
+   11. NAVIGATION (Glass bar)
+   ═══════════════════════════════════════ */
+
+.sh-nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 50;
+    background: var(--sh-glass-bg);
+    backdrop-filter: blur(var(--sh-glass-blur));
+    -webkit-backdrop-filter: blur(var(--sh-glass-blur));
+    border-bottom: 1px solid var(--sh-border);
+    height: 48px;
+}
+
+.sh-nav-inner {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+
+/* ═══════════════════════════════════════
+   12. METRIC CARD
+   ═══════════════════════════════════════ */
+
+.sh-metric {
+    background: var(--sh-card);
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-r-md);
+    padding: 1rem 1.25rem;
+}
+
+.sh-metric-value {
+    font-family: var(--sh-font-mono);
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--sh-text-1);
+}
+
+.sh-metric-label {
+    font-family: var(--sh-font-mono);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sh-text-3);
+    margin-top: 0.25rem;
+}
+
+.sh-metric-delta {
+    font-family: var(--sh-font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.sh-metric-delta--up {
+    color: var(--sh-green);
+}
+
+.sh-metric-delta--down {
+    color: var(--sh-red);
+}
+
+
+/* ═══════════════════════════════════════
+   13. LOG / CODE BLOCK
+   ═══════════════════════════════════════ */
+
+.sh-code {
+    background: var(--sh-void);
+    border: 1px solid var(--sh-border-subtle);
+    border-radius: var(--sh-r-md);
+    padding: 1rem;
+    font-family: var(--sh-font-mono);
+    font-size: 0.8rem;
+    line-height: 1.7;
+    color: var(--sh-text-2);
+    overflow-x: auto;
+}
+
+.sh-code .line-num {
+    color: var(--sh-text-3);
+    user-select: none;
+    min-width: 2.5rem;
+    display: inline-block;
+    text-align: right;
+    padding-right: 1rem;
+}
+
+
+/* ═══════════════════════════════════════
+   14. TABLE
+   ═══════════════════════════════════════ */
+
+.sh-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.sh-table th {
+    font-family: var(--sh-font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--sh-text-3);
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--sh-border);
+}
+
+.sh-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--sh-border-subtle);
+    color: var(--sh-text-2);
+}
+
+.sh-table tr:hover td {
+    background: var(--sh-surface);
+}
+
+
+/* ═══════════════════════════════════════
+   15. GRADIENT BORDER (network activity)
+   ═══════════════════════════════════════ */
+
+.sh-gradient-border {
+    position: relative;
+}
+
+.sh-gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg,
+            var(--sh-green-dim),
+            var(--sh-blue-dim),
+            var(--sh-green-dim));
+    background-size: 200% 200%;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity var(--sh-t-base);
+}
+
+.sh-gradient-border:hover::before,
+.sh-gradient-border.active::before {
+    opacity: 1;
+    animation: sh-gradient-shift 3s ease infinite;
+}
+
+
+/* ═══════════════════════════════════════
+   16. ALERT / NOTIFICATION
+   ═══════════════════════════════════════ */
+
+.sh-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--sh-r-md);
+    font-size: 0.85rem;
+}
+
+.sh-alert-success {
+    background: var(--sh-green-dim);
+    border: 1px solid rgba(63, 185, 80, 0.2);
+    color: var(--sh-green);
+}
+
+.sh-alert-error {
+    background: var(--sh-red-dim);
+    border: 1px solid rgba(248, 81, 73, 0.2);
+    color: var(--sh-red);
+}
+
+.sh-alert-warn {
+    background: var(--sh-amber-dim);
+    border: 1px solid rgba(210, 153, 34, 0.2);
+    color: var(--sh-amber);
+}
+
+.sh-alert-info {
+    background: var(--sh-blue-dim);
+    border: 1px solid rgba(88, 166, 255, 0.2);
+    color: var(--sh-blue);
+}
+
+
+/* ═══════════════════════════════════════
+   17. MODAL / OVERLAY
+   ═══════════════════════════════════════ */
+
+.sh-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sh-modal {
+    background: var(--sh-card);
+    border: 1px solid var(--sh-border-active);
+    border-radius: var(--sh-r-lg);
+    padding: 1.5rem;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: var(--sh-shadow-lg);
+}
+
+.sh-modal-title {
+    font-family: var(--sh-font-brand);
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+
+/* ═══════════════════════════════════════
+   18. TABS
+   ═══════════════════════════════════════ */
+
+.sh-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--sh-border);
+}
+
+.sh-tab {
+    padding: 0.6rem 1rem;
+    font-family: var(--sh-font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: var(--sh-text-3);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    transition: color var(--sh-t-fast), border-color var(--sh-t-fast);
+    margin-bottom: -1px;
+}
+
+.sh-tab:hover {
+    color: var(--sh-text-2);
+}
+
+.sh-tab.active {
+    color: var(--sh-text-1);
+    border-bottom-color: var(--sh-green);
+}
+
+
+/* ═══════════════════════════════════════
+   19. ANIMATIONS
+   ═══════════════════════════════════════ */
+
+@keyframes sh-ping {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+
+    75%,
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+@keyframes sh-glow {
+    0% {
+        box-shadow: 0 0 4px var(--sh-green-dim);
+    }
+
+    100% {
+        box-shadow: 0 0 16px rgba(63, 185, 80, 0.25);
+    }
+}
+
+@keyframes sh-glow-blue {
+    0% {
+        box-shadow: 0 0 4px var(--sh-blue-dim);
+    }
+
+    100% {
+        box-shadow: 0 0 16px rgba(88, 166, 255, 0.25);
+    }
+}
+
+@keyframes sh-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sh-fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sh-gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes sh-pulse-ring {
+    0% {
+        transform: scale(0.95);
+        opacity: 1;
+    }
+
+    70% {
+        transform: scale(1.05);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(0.95);
+        opacity: 1;
+    }
+}
+
+@keyframes sh-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Utility classes */
+.sh-fade-in {
+    animation: sh-fade-in 0.5s ease both;
+}
+
+.sh-fade-in-up {
+    animation: sh-fade-in-up 0.6s ease both;
+}
+
+/* Staggered entrance for children */
+.sh-stagger>* {
+    animation: sh-fade-in 0.5s ease both;
+}
+
+.sh-stagger>*:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.sh-stagger>*:nth-child(2) {
+    animation-delay: 0.10s;
+}
+
+.sh-stagger>*:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.sh-stagger>*:nth-child(4) {
+    animation-delay: 0.20s;
+}
+
+.sh-stagger>*:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.sh-stagger>*:nth-child(6) {
+    animation-delay: 0.30s;
+}
+
+.sh-stagger>*:nth-child(7) {
+    animation-delay: 0.35s;
+}
+
+.sh-stagger>*:nth-child(8) {
+    animation-delay: 0.40s;
+}
+
+
+/* ═══════════════════════════════════════
+   20. SCROLLBAR
+   ═══════════════════════════════════════ */
+
+body.sh ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+body.sh ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+body.sh ::-webkit-scrollbar-thumb {
+    background: var(--sh-border-active);
+    border-radius: 3px;
+}
+
+body.sh ::-webkit-scrollbar-thumb:hover {
+    background: var(--sh-text-3);
+}
+
+
+/* ═══════════════════════════════════════
+   21. ICON CONTAINER
+   ═══════════════════════════════════════ */
+
+.sh-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--sh-r-md);
+    flex-shrink: 0;
+}
+
+.sh-icon-sm {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+}
+
+.sh-icon-md {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+}
+
+.sh-icon-lg {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+}
+
+.sh-icon-green {
+    background: var(--sh-green-dim);
+    color: var(--sh-green);
+}
+
+.sh-icon-blue {
+    background: var(--sh-blue-dim);
+    color: var(--sh-blue);
+}
+
+.sh-icon-amber {
+    background: var(--sh-amber-dim);
+    color: var(--sh-amber);
+}
+
+.sh-icon-red {
+    background: var(--sh-red-dim);
+    color: var(--sh-red);
+}
+
+
+/* ═══════════════════════════════════════
+   22. LAYER ARCHITECTURE VISUAL
+   ═══════════════════════════════════════ */
+
+.sh-layers {
+    position: relative;
+    width: 280px;
+    height: 320px;
+}
+
+.sh-layer {
+    position: absolute;
+    width: 220px;
+    height: 140px;
+    left: 50%;
+    top: 50%;
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-r-md);
+    transition: transform var(--sh-t-slow), border-color var(--sh-t-slow), opacity var(--sh-t-slow);
+}
+
+.sh-layer-4 {
+    transform: translate(-50%, -50%) translate(36px, -42px);
+    border-color: rgba(255, 255, 255, 0.03);
+    background: rgba(17, 24, 32, 0.3);
+    z-index: 1;
+}
+
+.sh-layer-3 {
+    transform: translate(-50%, -50%) translate(24px, -28px);
+    border-color: rgba(255, 255, 255, 0.05);
+    background: rgba(21, 27, 35, 0.4);
+    z-index: 2;
+}
+
+.sh-layer-2 {
+    transform: translate(-50%, -50%) translate(12px, -14px);
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(21, 27, 35, 0.6);
+    z-index: 3;
+}
+
+.sh-layer-1 {
+    transform: translate(-50%, -50%);
+    border-color: var(--sh-border-active);
+    background: rgba(28, 35, 51, 0.8);
+    z-index: 4;
+    animation: sh-glow 2s ease-in-out infinite alternate;
+}
+
+.sh-layers:hover .sh-layer-4 {
+    transform: translate(-50%, -50%) translate(44px, -52px);
+}
+
+.sh-layers:hover .sh-layer-3 {
+    transform: translate(-50%, -50%) translate(30px, -35px);
+}
+
+.sh-layers:hover .sh-layer-2 {
+    transform: translate(-50%, -50%) translate(15px, -17px);
+}
+
+.sh-layers:hover .sh-layer-1 {
+    border-color: var(--sh-green);
+}
+
+
+/* ═══════════════════════════════════════
+   23. TOOLTIP
+   ═══════════════════════════════════════ */
+
+.sh-tooltip {
+    position: relative;
+}
+
+.sh-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.3rem 0.6rem;
+    font-family: var(--sh-font-mono);
+    font-size: 0.7rem;
+    color: var(--sh-text-1);
+    background: var(--sh-elevated);
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-r-sm);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--sh-t-fast);
+}
+
+.sh-tooltip:hover::after {
+    opacity: 1;
+}

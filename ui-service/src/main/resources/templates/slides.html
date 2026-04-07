@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SlideHub — Proyector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide-wrapper {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        #error-msg {
+            display: none;
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slide-wrapper" id="slide-wrapper">
+        <!-- Las imágenes se generan dinámicamente por JS una vez conoce totalSlides -->
+    </div>
+    <div id="error-msg">Sin conexión</div>
+
+    <script th:inline="javascript">
+        const POLL_INTERVAL_MS = /*[[${pollIntervalMs}]]*/ 1000;
+        const API_SLIDE_URL = '/api/slide';
+        const PRESENTATION_ID = /*[[${presentationId}]]*/ '';
+        const SLIDES_CATALOG_API = PRESENTATION_ID ? `/api/presentations/${PRESENTATION_ID}/slides` : '';
+
+        let currentSlide = 0;
+        let totalSlides = 0;
+        let slideUrls = [];
+        const wrapper = document.getElementById('slide-wrapper');
+        const errorMsg = document.getElementById('error-msg');
+
+        function buildSlides(total) {
+            wrapper.innerHTML = '';
+            for (let i = 1; i <= total; i++) {
+                const img = document.createElement('img');
+                const url = slideUrls[i - 1] || `/presentation/Slide${i}.PNG`;
+                img.src = url;
+                img.alt = `Slide ${i}`;
+                img.className = 'slide';
+                img.id = `slide-${i}`;
+                wrapper.appendChild(img);
+            }
+        }
+
+        async function loadSlidesCatalog() {
+            if (!SLIDES_CATALOG_API) {
+                slideUrls = [];
+                return;
+            }
+            try {
+                const res = await fetch(SLIDES_CATALOG_API);
+                if (!res.ok) {
+                    slideUrls = [];
+                    return;
+                }
+                const data = await res.json();
+                slideUrls = (data.slides || [])
+                    .sort((a, b) => a.number - b.number)
+                    .map(slide => slide.s3Url || `/presentation/Slide${slide.number}.PNG`);
+                if (slideUrls.length > 0) {
+                    totalSlides = slideUrls.length;
+                    buildSlides(totalSlides);
+                }
+            } catch (_) {
+                slideUrls = [];
+            }
+        }
+
+        function showSlide(n) {
+            document.querySelectorAll('.slide.active')
+                .forEach(el => el.classList.remove('active'));
+            const target = document.getElementById(`slide-${n}`);
+            if (target) target.classList.add('active');
+        }
+
+        async function poll() {
+            try {
+                const res = await fetch(API_SLIDE_URL);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                errorMsg.style.display = 'none';
+
+                const effectiveTotal = slideUrls.length > 0 ? slideUrls.length : data.totalSlides;
+                if (effectiveTotal !== totalSlides) {
+                    totalSlides = effectiveTotal;
+                    buildSlides(totalSlides);
+                }
+                if (data.slide !== currentSlide) {
+                    currentSlide = data.slide;
+                    showSlide(currentSlide);
+                }
+            } catch (e) {
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        loadSlidesCatalog().finally(poll);
+        setInterval(poll, POLL_INTERVAL_MS);
+    </script>
+</body>
+
+</html>

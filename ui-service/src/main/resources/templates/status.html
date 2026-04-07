@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>System Status — SlideHub</title>
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+    <style>
+        @media (max-width: 640px) {
+            .status-nav {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                justify-content: flex-start;
+            }
+
+            .status-nav-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
+        .diag-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
+        }
+
+        .diag-card {
+            background: var(--sh-deep);
+            border: 1px solid var(--sh-border);
+            border-radius: var(--sh-r-md);
+            padding: 0.75rem;
+        }
+
+        .diag-chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 190px;
+            border-radius: var(--sh-r-md);
+            border: 1px solid var(--sh-border-subtle);
+            background: linear-gradient(180deg, rgba(22, 27, 34, 0.9) 0%, rgba(13, 17, 23, 0.95) 100%);
+            overflow: hidden;
+        }
+
+        .diag-chart-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .diag-chart-empty {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--sh-font-mono);
+            font-size: 0.72rem;
+            color: var(--sh-text-3);
+            pointer-events: none;
+        }
+
+        .diag-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            font-size: 0.78rem;
+            font-family: var(--sh-font-mono);
+            color: var(--sh-text-2);
+            border-bottom: 1px solid var(--sh-border-subtle);
+            padding: 0.35rem 0;
+            word-break: break-word;
+        }
+
+        .diag-item:last-child {
+            border-bottom: none;
+        }
+
+        .diag-item strong {
+            color: var(--sh-text-3);
+            font-weight: 500;
+            min-width: 130px;
+        }
+
+        .diag-severity {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border-radius: 999px;
+            padding: 0.2rem 0.55rem;
+            font-family: var(--sh-font-mono);
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            border: 1px solid transparent;
+        }
+
+        .diag-severity-info {
+            background: var(--sh-blue-dim);
+            border-color: rgba(88, 166, 255, 0.25);
+            color: var(--sh-blue);
+        }
+
+        .diag-severity-warn {
+            background: var(--sh-amber-dim);
+            border-color: rgba(210, 153, 34, 0.25);
+            color: var(--sh-amber);
+        }
+
+        .diag-severity-error {
+            background: var(--sh-red-dim);
+            border-color: rgba(248, 81, 73, 0.25);
+            color: var(--sh-red);
+        }
+
+        @media (min-width: 768px) {
+            .diag-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+
+<body class="sh bg-sh-deep antialiased min-h-screen">
+    <nav class="sh-nav" style="position: sticky;">
+        <div class="sh-nav-inner status-nav">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <span class="font-brand text-base tracking-tight">System Status</span>
+                <div class="sh-status ml-1 hidden sm:inline-flex">
+                    <i class="fa-solid fa-wave-square text-xs" style="color: var(--sh-blue);"></i>
+                </div>
+            </div>
+            <div class="status-nav-actions flex items-center gap-2">
+                <a href="/presenter" class="sh-btn sh-btn-ghost text-xs">
+                    <i class="fa-solid fa-chalkboard"></i>
+                    <span class="hidden sm:inline">Presentador</span>
+                </a>
+                <a href="/main-panel" class="sh-btn sh-btn-ghost text-xs">
+                    <i class="fa-solid fa-table-cells-large"></i>
+                    <span class="hidden sm:inline">Panel</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-[1100px] mx-auto px-4 py-6">
+        <div class="sh-card p-5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                <div class="sh-label">
+                    <i class="fa-solid fa-heart-pulse mr-1"></i>CONECTIVIDAD EN TIEMPO REAL
+                </div>
+                <div class="text-xs font-mono text-[var(--sh-text-3)]">
+                    Sondeo: <span id="poll-interval">--</span>ms · Última actualización: <span
+                        id="last-updated">--</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm" style="border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--sh-border);">
+                            <th class="text-left py-2 text-xs font-mono text-[var(--sh-text-3)]">OBJETIVO</th>
+                            <th class="text-left py-2 text-xs font-mono text-[var(--sh-text-3)]">STATUS</th>
+                            <th class="text-left py-2 text-xs font-mono text-[var(--sh-text-3)]">LATENCIA (MS)</th>
+                            <th class="text-left py-2 text-xs font-mono text-[var(--sh-text-3)]">ÚLTIMA VERIFICACIÓN
+                            </th>
+                            <th class="text-left py-2 text-xs font-mono text-[var(--sh-text-3)]">DETALLE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="checks-body">
+                        <tr>
+                            <td colspan="5" class="py-4 text-[var(--sh-text-3)] font-mono text-xs">Cargando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="status-error" class="mt-3 text-xs font-mono hidden" style="color: var(--sh-red);"></div>
+        </div>
+    </main>
+
+    <div id="diagnostic-modal" class="sh-overlay hidden"
+        onclick="if(event.target===this)window.closeStatusDiagnostic()">
+        <div class="sh-modal max-w-3xl w-[95%]">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <div class="sh-label mb-1">SERVICE DIAGNOSTIC</div>
+                    <h3 id="diag-title" class="font-brand text-xl text-[var(--sh-text-1)]">--</h3>
+                </div>
+                <div id="diag-severity" class="diag-severity diag-severity-info">INFO</div>
+                <button type="button" class="sh-btn sh-btn-ghost text-xs" onclick="window.closeStatusDiagnostic()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="diag-card mb-3">
+                <div class="sh-label mb-2">IMPACT</div>
+                <div id="diag-impact" class="text-sm text-[var(--sh-text-2)]">--</div>
+            </div>
+
+            <div class="diag-card mb-3">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="sh-label">LATENCY TREND</div>
+                    <div id="diag-chart-meta" class="text-[0.68rem] font-mono text-[var(--sh-text-3)]">--</div>
+                </div>
+                <div class="diag-chart-wrap">
+                    <canvas id="diag-latency-chart" class="diag-chart-canvas" aria-label="Latency chart"></canvas>
+                    <div id="diag-chart-empty" class="diag-chart-empty">Sin suficientes datos de latencia</div>
+                </div>
+            </div>
+
+            <div class="diag-grid mb-3">
+                <div class="diag-card">
+                    <div class="sh-label mb-2">CONNECTION PROPERTIES</div>
+                    <div id="diag-connection"></div>
+                </div>
+                <div class="diag-card">
+                    <div class="sh-label mb-2">LATENCY AND ERRORS</div>
+                    <div id="diag-latency"></div>
+                </div>
+            </div>
+
+            <div class="diag-card mb-3">
+                <div class="sh-label mb-2">POSSIBLE CAUSES</div>
+                <ul id="diag-causes" class="text-sm text-[var(--sh-text-2)] list-disc pl-5 space-y-1"></ul>
+            </div>
+
+            <div class="diag-card">
+                <div class="sh-label mb-2">POSSIBLE FIX</div>
+                <ul id="diag-fixes" class="text-sm text-[var(--sh-text-2)] list-disc pl-5 space-y-1"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        window.statusConfig = {
+            pollIntervalMs: /*[[${pollIntervalMs}]]*/ 2000
+        };
+    </script>
+    <script src="/js/status-poll.js"></script>
+</body>
+
+</html>

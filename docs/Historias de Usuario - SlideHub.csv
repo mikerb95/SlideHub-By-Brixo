@@ -1,0 +1,116 @@
+,,,,,,,,,
+,Enunciado de la historia,,,,,Criterios de aceptación,,,
+,ID de la Historia,Rol,Característica / Funcionalidad,Razón / Resultado,N° de escenario,Criterio de aceptación (Título),Contexto,Evento,Resultado / Comportamiento esperado
+,,,,,,,,,
+,HU-001,Usuario Presentador,Como presentador necesito iniciar sesión con mi usuario y contraseña,Con la finalidad de acceder a las vistas protegidas del sistema,1,Login exitoso,Cuando el presentador se encuentra en /auth/login y tiene una cuenta registrada,Al ingresar usuario y contraseña correctos y hacer clic en Iniciar Sesión,"Mensaje final: El sistema valida las credenciales con BCrypt, crea la sesión y redirige a /presenter"
+,,,,,2,Evento,Cuando el presentador se encuentra en /auth/login.,"Al ingresar usuario o contraseña incorrectos y hacer clic en
+Iniciar Sesión","Se muestra el mensaje ""Usuario o contraseña
+incorrectos"" sin indicar cuál falló y no se crea sesión
+Iniciar Sesión"
+,,,,,3,Resultado,Cuando el presentador ya tiene una sesión activa.,Al intentar acceder a /auth/login.,"El sistema redirige directamente a /presenter sin mostrar
+el formulario de login"
+,,,,,,,,,
+,HU-002,Usuario Presentador,"Como presentador necesito crear una cuenta nueva con mi nombre, usuario y contraseña",Con la finalidad de acceder al sistema sin depender de un administrador,1,Registro exitoso,"Cuando el usuario se encuentra en /auth/register y el
+username no existe en el sistema","Al completar el formulario con displayName, username y password válidos y hacer clic en Registrarse","La cuenta es creada con rol PRESENTER, la contraseña
+se almacena con BCrypt y el usuario puede iniciar sesión"
+,,,,,2,Username ya registrado,"Cuando el usuario se encuentra en /auth/register y el
+username elegido ya existe en la base de datos",Al hacer clic en Registrarse con un username duplicado.,"Se muestra un error indicando que el usuario ya existe y
+no se crea la cuenta"
+,,,,,,,,,
+,HU-003,Usuario Presentador,Como presentador necesito cerrar mi sesión activa,"Con la finalidad de que nadie más pueda acceder a las vistas protegidas
+desde este dispositivo",1,Cierre de sesión exitoso,"Cuando el presentador tiene una sesión activa en el
+sistema",Al hacer clic en Cerrar Sesión,"La sesión es invalidada y se redirige a /auth/login
+mostrando el mensaje ""Sesión cerrada correctamente"""
+,,,,,2,Acceso bloqueado tras cerrar sesión,Cuando el presentador acaba de cerrar sesión,Al intentar acceder a /presenter o /main-panel.,"El sistema redirige a /auth/login sin mostrar el contenido
+protegido"
+,,,,,,,,,
+,HU-004,Usuario Presentador,Como presentador necesito avanzar y retroceder diapositivas  desde mi smartphone,Con la finalidad de moverme libremente por el escenario sin depender de una computadora.,1,Avanzar al siguiente slide,Cuando el presentador tiene abierto /remote y se encuentra en el slide 3 de 11.,Al hacer clic en Siguiente o realizar swipe hacia la izquierda.,El slide activo cambia a 4 y todas las pantallas conectadas muestran el slide 4.
+,,,,,2,Retroceder al slide anterior,Cuando el presentador tiene abierto /remote y se encuentra en el slide 5 de 11.,Al hacer clic en Anterior o realizar swipe hacia la derecha. ,El slide activo cambia a 4 y todas las pantallas conectadas muestran el slide 4.
+,,,,,3,Bloqueo al llegar al último slide,"Cuando el presentador se encuentra en el slide 11, que es el último disponible.",Al hacer clic en Siguiente.,El sistema no avanza más allá del total de slides y mantiene el slide 11 activo sin mostrar error.
+,,,,,4,Bloqueo al llegar al primer slide,Cuando el presentador se encuentra en el slide 1.,Al hacer clic en Anterior.,El sistema no retrocede por debajo de 1 y mantiene el slide 1 activo sin mostrar error.
+,,,,,5,Feedback háptico al pulsar botones,Cuando el presentador usa /remote en un dispositivo con soporte de vibración.,Al hacer clic en cualquiera de los botones de navegación.,El dispositivo produce vibración háptica confirmatoria.
+,,,,,,,,,
+,HU-005,Usuario Audiencia,Como audiencia necesito ver siempre la diapositiva activa en el proyector.,Con la finalidad de seguir la presentación sin ninguna intervención manual.,1,Carga inicial del proyector,Cuando el proyector accede a /slides por primera vez.,Al terminar de cargar la página.,La diapositiva activa se muestra en fullscreen sin solicitar login ni ninguna acción.
+,,,,,2,Sincronización automática al cambiar slide,Cuando el proyector tiene cargada /slides y el presentador avanza un slide.,Al detectar un número distinto en el polling a GET /api/slide.,La imagen en el proyector cambia al nuevo slide sin recargar la página completa.
+,,,,,3,Sin slides cargados,Cuando no hay archivos de diapositivas en el directorio configurado.,Al terminar de cargar la vista /slides.,Se muestra un mensaje informativo neutro en lugar de un error de servidor.
+,,,,,,,,,
+,HU-006,Usuario Presentador,"Como presentador necesito ver el slide actual, mis notas y el preview del siguiente en mi laptop.",Con la finalidad de recordar el hilo del discurso sin mirar la pantalla de proyección.,1,Acceso autenticado,Cuando el presentador tiene sesión activa en el sistema.,Al ingresar a /presenter.,"Se muestra el slide actual en tamaño destacado, el preview del siguiente slide, el número de slide actual y el tot"
+,,,,,2,Redirección si no está autenticado,Cuando el usuario no tiene sesión activa.,Al intentar acceder directamente a /presenter.,El sistema redirige a /auth/login sin mostrar ningún contenido de la vista.
+,,,,,3,Notas de IA visibles en la vista,Cuando el presentador está autenticado en /presenter y existen notas generadas para el slide activo.,Al cambiar el slide activo al slide N.,La vista muestra automáticamente las notas del presentador correspondientes al slide N
+,,,,,,,,,
+,HU-007,Responsable técnico,Como responsable técnico necesito navegar directamente a cualquier diapositiva desde el panel maestro.,Con la finalidad de recuperar el hilo o saltar a secciones concretas rápidamente en caso de error.,1,Salto directo por thumbnail,Cuando el responsable tiene /main-panel abierto con sesión activa.,Al hacer clic en el thumbnail del slide 7.,Todas las pantallas conectadas se actualizan al slide 7 y el thumbnail 7 queda visualmente resaltado.
+,,,,,2,Acceso bloqueado sin autenticación,Cuando el usuario no tiene sesión activa.,Al intentar acceder a /main-panel.,El sistema redirige a /auth/login sin mostrar el panel.
+,,,,,,,,,
+,HU-008, Dispositivo Cliente ,Como dispositivo cliente necesito consultar el número de diapositiva activa.,Con la finalidad de sincronizarme con el estado real de la presentación.,1,Consulta con slide establecido,Cuando la presentación está en curso y el slide activo es el número 5,Al consultar GET /api/slide.,"El sistema responde { ""slide"": 5, ""totalSlides"": 11 }."
+,,,,,2,Consulta sin slide previo establecido,Cuando el sistema acaba de arrancar y no se ha navegado a ningún slide.,Al consultar GET /api/slide.,"El sistema responde con { ""slide"": 1, ""totalSlides"": N } usando el valor por defecto."
+,,,,,,,,,
+,HU-009, Dispositivo Cliente ,Como dispositivo cliente necesito consultar el número de diapositiva activa.,Con la finalidad de sincronizarme con el estado real de la presentación.,1, Consulta con slide establecido:,Cuando la presentación está en curso y el slide activo es el número 5.,Al consultar GET /api/slide.," El sistema responde { ""slide"": 5, ""totalSlides"": 11 }."
+,,,,,,,,,
+,HU-010,Responsable técnico,Como responsable técnico necesito desactivar el modo URL y volver a mostrar diapositivas en la pantalla demo.,Con la finalidad de retomar la presentacion normal despues de mostrar contenido externo,1,Como responsable técnico necesito desactivar el modo URL y volver a mostrar diapositivas en la pantalla demo.,Cuando la pantalla demo está mostrando una URL en iframe.,Al hacer clic en Activar modo Slides desde el panel maestro.,La pantalla /demo vuelve a mostrar la diapositiva activa sin recargar la página.
+,,,,,,,,,
+,HU-011,Usuario Audiencia,Como audiencia necesito que la pantalla demo muestre automáticamente lo correcto según el modo activo.,Con la finalidad de seguir  la presentacion sin ninguna interaccion requerida ,1,Vista demo en modo slides,Cuando la pantalla /demo está cargada y el modo activo es slides.,"Al recibir { ""mode"": ""slides"", ""slide"": 4 } en la consulta a GET /api/demo.",La pantalla muestra la diapositiva 4 sincronizada igual que /slides.
+,,,,,2,Vista demo en modo URL,Cuando la pantalla /demo está cargada y el modo activo cambia a url,"Al recibir { ""mode"": ""url"", ""url"": ""/mapa"" } en la consulta a GET /api/demo.",La pantalla cambia al iframe de /mapa a pantalla completa sin recargar la página.
+,,,,,,,,,
+,HU-012,Usuario Visitante,Como visitante necesito ver la página de presentación del proyecto SlideHub.,Con la finalidad de enteder que es el sistema antes de decidir usarlo,1, Acceso público al showcase,Cuando el visitante no tiene sesión activa,Al ingresar a /showcase,"El sistema muestra la landing page del proyecto sin
+solicitar login"
+,,,,,,,,,
+,HU-013,Usuario Vista HTML,Como vista HTML necesito cargar las imágenes de las diapositivas.,Con la finalidad de mostrar el contenido visual de la presentacion en pantalla,1, Imagen de slide existente,"Cuando el archivo Slide3.PNG existe en el directorio
+SLIDES_DIR.",Al solicitar GET /presentation/Slide3.PNG.,"El sistema entrega la imagen como recurso estático sin
+requerir autenticación."
+,,,,,2,Imagen de slide inexistente,Cuando el archivo solicitado no existe,Al solicitar GET /presentation/Slide99.PNG, El sistema responde 404 Not Found
+,,,,,,,,,
+,HU-014,Usuario Admin, Como administrador necesito ver la lista de todos los dispositivos registrados en el sistema,Con la finalidad de saber que pantallas estan activas y que tipo de dispositivo es cada una,1,Lista con dispositivos,Hay dispositivos registrados y sesión activa.,Al ingresar a GET /api/devices,"El sistema muestra un listado con nombre, tipo, token,
+última IP y última conexión."
+,,,,,2,Lista vacía,No hay dispositivos registrados., Al ingresar al listado,El sistema responde con una lista vacía sin error
+,,,,,3,Acceso bloquedo,"Usuario no autenticado
+
+",Intento de acceso a la API,El sistema bloquea el acceso y redirige al login
+,,,,,,,,,
+,HU-015,Usuario Admin,Como administrador necesito buscar un dispositivo usando su token único,Con la finalidad de verificar su identidad sin necesidad de recorrer toda la lista,1,Token encontrado, Existe un dispositivo con el token solicitado,Al consultar GET /api/devices/token/{token},"El sistema muestra la información completa del
+dispositivo"
+,,,,,2,Token no encontrado, No existe el token,Al consultar el endpoint,El sistema responde 404 Not Found
+,,,,,,,,,
+,HU-016,Usuario Presentador,Como presentador necesito generar automáticamente notas para un slide usando inteligencia artificial.,Con la finalidad de ahorrar tiempo de preparacion y contar con un guion estructurado,1,Generación exitosa,API de Groq disponible y no existe nota previa.,Al enviar datos a POST /api/ai/notes/generate.,"El sistema guarda en MongoDB una nota con title, points, suggestedTime, keyPhrases y demoTags, y responde con { success: true }."
+,,,,,2,Actualización de nota existente,Ya existe una nota para ese slide.,Al enviar nuevamente el POST.,El sistema sobreescribe la nota existente sin crear duplicados.
+,,,,,3,Error en API de Groq,API no disponible.,Intento de generación.,"Responde { success: false, errorMessage: ""descripción del error"" } sin guardar nada."
+,,,,,,,,,
+,HU-017,Usuario Presentador,Como presentador necesito obtener todas las notas generadas de mi presentación.,Con la finalidad de revisarlas o mostrarlas en la vista del presentador,1,Notas disponibles,Cuando existen notas generadas para la presentación solicitada,Acceso a GET /api/ai/notes/{presentationId}.,El sistema muestra todas las notas ordenadas por número de slide.
+,,,,,2,Sin notas generadas ,Cuando no existen notas para el presentationid solicitado,Al ingresar al listado de notas ,El sistema responde con una lista vacía sin error
+,,,,,,,,,
+,HU-018,Vista del presentador,Como vista del presentador necesito obtener la nota del slide que se muestra actualmente.,Con la finalidad de mostrarla al presentador justo cuando la necesita,1,Nota encontrada,Cuando existe una nota generada para el slide solicitado,Consulta GET /api/ai/notes/{presentationId}/{slideNumber}.,"El sistema muestra la nota completa con title, points, suggestdTime, keyPhrases y demoTags"
+,,,,,2,Nota no generada aun ,Cuando no existen notas para el presentationid solicitado,Consulta GET /api/ai/notes/{presentationId}/{slideNumber}.,El sistema responde 204 No Content
+,,,,,,,,,
+,HU-019,Usuario Presentador,Como presentador necesito eliminar todas las notas de una presentación.,Con la finalidad de regenerarlas desde cero cuando el contenido de los slides cambia,1,Eliminacion exitosa,Cuando  existen notas almacenas para el presentationld indicados ,Al ejecutar  DELETE /api/notes{presentationId},El sistema elimina registros de MongoDB y responde 204 No Content.
+,,,,,2,Eliminacion sin notas previas ,Cuando no existen notas para el presentationld indicado ,Al ejecutar  DELETE /api/notes{presentationId},El sistema responde igualmente igulmente 204 No Content sin mostrar error 
+,,,,,,,,,
+,HU-020,Operador de infraestructura,Como operador de infraestructura necesito verificar que el servicio de IA está operativo.,Con la finalidad de detectar caidas y reiniciar el contenedor automaticamente si es necesario ,1,Health check IA,Cuando el servicio slidehub-ai esta en ejecucion ,Consultar GET /api/ai/notes/health.,"Responde 200 OK ""SlideHub AI Service is running""."
+,,,,,2,Health check general de actuador ,Cuando cualquier de los 3 servicios esta en ejecucion ,Consultar GET /actuator/health.,Responde 200 OK con el JSON de Spring Actuator indicando estado UP.
+
+,,,,,,,,,
+,HU-031,Usuario Presentador,Como presentador necesito generar un enlace QR y permitir que mi equipo se una a una sesión activa con su nombre o participando en una lista predefinida,Con la finalidad de coordinar el equipo sin compartir credenciales del sistema,1,Inicio de sesión de reunión,Cuando la presentación tiene una sesión activa creada desde /main-panel.,Al abrir el enlace /remote con joinToken válido.,El sistema muestra opciones de ingreso con la lista de participantes cargada por el organizador o permite escribir un nombre nuevo si la sesión lo admite.
+,,,,,2,Ingreso con participante predefinido,Cuando el nombre del participante existe en la lista de la presentación.,Al seleccionar ese nombre y confirmar el ingreso.,El sistema crea un participantToken único para esa sesión y mantiene el acceso activo en el dispositivo.
+,,,,,3,Ingreso con nombre personalizado,Cuando el organizador permite participantes libres en la sesión.,Al escribir un nombre nuevo y confirmar.,El sistema registra el participante para esa presentación y devuelve un participantToken válido para la sesión.
+
+,,,,,,,,,
+,HU-032,Usuario Presentador,Como presentador necesito gestionar participantes de la presentación y asignar un responsable por slide,Con la finalidad de repartir el control y la preparación de cada parte de la charla,1,Alta de participante,Cuando el presentador está autenticado en /main-panel y la presentación está seleccionada.,Al agregar un nuevo participante con nombre visible y marca de presentador o asistente.,El sistema guarda el participante y lo muestra en la lista de gestión sin duplicar nombres dentro de la misma presentación.
+,,,,,2,Asignación por diapositiva,Cuando ya existen participantes en la presentación.,Al seleccionar un slide y asignarle un responsable.,El sistema persiste la relación slide-responsable y la muestra en el panel maestro.
+,,,,,3,Verificación de responsabilidad,Cuando un participante abre /remote dentro de una sesión activa.,Al consultar el slide actual mientras avanza la presentación.,El sistema indica si ese slide le corresponde al participante y permite activar el feedback háptico de confirmación.
+
+,,,,,,,,,
+,HU-033,Usuario Presentador,Como presentador necesito pedir ayuda desde mi móvil y notificar al resto del equipo con vibración triple,Con la finalidad de solicitar apoyo sin interrumpir la presentación,1,Ayuda enviada al equipo,Cuando el presentador tiene una sesión activa en /remote y pulsa el botón de ayuda.,Al confirmar la solicitud.,El sistema envía un evento háptico triple a todos los participantes activos de la sesión excepto al emisor y muestra el número de destinatarios notificados.
+,,,,,2,El emisor no se notifica,Cuando el mismo participante que pidió ayuda está conectado a la sesión.,Al publicarse el evento de ayuda.,El sistema no envía el evento al dispositivo origen y conserva la vibración solo para los demás miembros activos.
+
+,,,,,,,,,
+,HU-034,Usuario Presentador,Como presentador necesito mantener pulsado el botón de micrófono, dictar una pregunta y recibir una respuesta asistida por IA,Con la finalidad de resolver dudas en vivo usando el contexto del repositorio y del slide actual,1,Transcripción por audio,Cuando el presentador mantiene pulsado el micrófono y suelta la grabación.,Al enviar el audio capturado a la API de asistencia.,El sistema transcribe el audio con Groq Whisper y devuelve el texto detectado junto con una respuesta breve en español.
+,,,,,2,Respuesta visible para la sesión,Cuando la respuesta asistida se genera correctamente.,Al completarse el flujo de audio.,El sistema muestra la respuesta en los dispositivos conectados de la sesión y emite una notificación háptica simple para el equipo activo.
+,,,,,3,Fallo controlado,Cuando la API de IA no puede procesar el audio.,Al terminar la petición.,El sistema responde con success false y un mensaje de error sin romper la sesión ni el control remoto.
+
+,,,,,,,,,
+,HU-035,Usuario Presentador,Como presentador necesito generar un quick slide a partir de la presentación activa usando los colores dominantes detectados,Con la finalidad de agregar contenido de apoyo visual sin salir del flujo de la charla,1,Generación de quick slide,Cuando el presentador está autenticado y tiene una presentación activa seleccionada.,Al completar el formulario de quick slide en /main-panel.,El sistema crea una diapositiva nueva asociada a la presentación, la guarda y la incorpora al final del catálogo de slides.
+,,,,,2,Colores primarios detectados,Cuando la presentación tiene slides previos cargados.,Al invocar la generación.,El sistema usa los colores dominantes de la presentación activa como base visual del slide generado.
+,,,,,3,Slide disponible inmediatamente,Cuando el quick slide ya fue creado.,Al consultar el catálogo de la presentación.,El nuevo slide aparece en /slides, /demo y /presenter sin requerir recarga manual del sistema.
+
+,,,,,,,,,
+,HU-036,Usuario Presentador,Como presentador necesito que las pantallas lean el catálogo de slides por presentación y no solo los recursos estáticos globales,Con la finalidad de reproducir correctamente varias presentaciones y no depender de un único directorio compartido,1,Catálogo por presentación,Cuando una vista carga con presentationId disponible.,Al consultar GET /api/presentations/{presentationId}/slides.,El sistema responde con el catálogo completo de slides, totalSlides y metadatos necesarios para playback.
+,,,,,2,Compatibilidad en vistas,Cuando /slides, /demo o /presenter reciben un presentationId válido.,Al iniciar el polling o el renderizado inicial.,La vista consume el catálogo de la presentación y usa fallback estático solo si no hay catálogo disponible.
+,,,,,3,Protección de acceso,Cuando el catálogo no existe para la presentación solicitada.,Al consultar el endpoint.,El sistema responde 404 Not Found sin exponer contenido de otra presentación.

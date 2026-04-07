@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <div th:fragment="slidehubLogo(smallText, titleClass, imageClass)" class="text-center mb-4">
+        <img th:src="@{/images/logo.svg}" alt="SlideHub" class="mb-2" th:classappend="${imageClass}" width="96"
+            height="96" />
+        <div th:class="${titleClass}">
+            <span class="text-success">●</span>
+            <span th:text="${smallText}">SlideHub</span>
+        </div>
+    </div>
+</body>
+
+</html>

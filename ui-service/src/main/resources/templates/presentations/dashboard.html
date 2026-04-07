@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Presentaciones — SlideHub</title>
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+</head>
+
+<body class="sh bg-sh-deep antialiased min-h-screen">
+
+    <!-- ═══ Nav ═══ -->
+    <nav class="sh-nav">
+        <div class="sh-nav-inner">
+            <div class="flex items-center gap-3">
+                <span class="font-brand text-base tracking-tight text-[var(--sh-text-1)]">SlideHub</span>
+                <span class="sh-badge ml-1">PRESENTATIONS</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/auth/profile" class="sh-btn sh-btn-ghost text-xs">
+                    <i class="fa-solid fa-user"></i>
+                </a>
+                <form th:action="@{/auth/logout}" method="post" class="inline">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}">
+                    <button type="submit" class="sh-btn sh-btn-ghost text-xs">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto px-4 pt-16 pb-8">
+
+        <!-- ── Header + New button ── -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+            <div>
+                <h1 class="text-lg font-medium text-[var(--sh-text-1)]">Mis Presentaciones</h1>
+                <p class="font-mono text-xs text-[var(--sh-text-3)] mt-1"
+                    th:text="${#lists.size(presentations)} + ' presentaciones'">0 presentaciones</p>
+            </div>
+            <a href="/presentations/new"
+                class="sh-btn sh-btn-primary text-sm w-full sm:w-auto justify-center sm:justify-start">
+                <i class="fa-solid fa-plus mr-1"></i> Nueva Presentacion
+            </a>
+        </div>
+
+        <div th:if="${deleted}" class="sh-alert sh-alert-success mb-4">
+            <i class="fa-solid fa-circle-check mt-0.5"></i>
+            <span>Presentación eliminada correctamente.</span>
+        </div>
+        <div th:if="${notFound}" class="sh-alert sh-alert-warn mb-4">
+            <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+            <span>La presentación ya no existe o no tienes permisos.</span>
+        </div>
+        <div th:if="${deleteError}" class="sh-alert sh-alert-error mb-4">
+            <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+            <span>No se pudo eliminar la presentación. Inténtalo nuevamente.</span>
+        </div>
+
+        <!-- ── Empty state ── -->
+        <div th:if="${#lists.isEmpty(presentations)}" class="sh-card p-12 text-center animate-fade-in">
+            <i class="fa-solid fa-layer-group text-4xl text-[var(--sh-text-3)] mb-4"></i>
+            <p class="text-[var(--sh-text-2)] mb-1">No tienes presentaciones aun.</p>
+            <p class="font-mono text-xs text-[var(--sh-text-3)] mb-6">Crea tu primera presentacion para comenzar.</p>
+            <a href="/presentations/new" class="sh-btn sh-btn-primary text-sm">
+                <i class="fa-solid fa-plus mr-1"></i> Crear Presentacion
+            </a>
+        </div>
+
+        <!-- ── Grid ── -->
+        <div th:unless="${#lists.isEmpty(presentations)}" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <div th:each="p : ${presentations}"
+                class="sh-card p-5 flex flex-col gap-3 animate-fade-in hover:border-[var(--sh-border-active)] transition-colors">
+
+                <!-- Header -->
+                <div class="flex justify-between items-start">
+                    <div class="min-w-0">
+                        <div class="text-sm font-medium text-[var(--sh-text-1)] truncate" th:text="${p.name()}">Name
+                        </div>
+                        <div class="font-mono text-xs text-[var(--sh-text-3)] mt-0.5"
+                            th:text="${p.totalSlides()} + ' slides'">0 slides</div>
+                    </div>
+                    <span class="sh-badge text-[0.6rem] shrink-0 ml-2"
+                        th:classappend="${p.sourceType() == 'DRIVE'} ? 'sh-badge-blue' : 'sh-badge-green'"
+                        th:text="${p.sourceType() == 'DRIVE' ? 'Drive' : 'Upload'}">
+                    </span>
+                </div>
+
+                <!-- Description -->
+                <p th:if="${p.description() != null and !p.description().isBlank()}"
+                    class="text-xs text-[var(--sh-text-2)] line-clamp-2" th:text="${p.description()}"></p>
+
+                <!-- Date -->
+                <div class="font-mono text-[0.65rem] text-[var(--sh-text-3)]"
+                    th:text="${#temporals.format(p.createdAt(), 'dd MMM yyyy')}">01 Jan 2026</div>
+
+                <!-- Actions -->
+                <div class="flex gap-2 flex-wrap mt-auto pt-2 border-t border-[var(--sh-border)]">
+                    <a th:href="@{/presenter(presentationId=${p.id()})}"
+                        class="sh-btn sh-btn-ghost text-[0.7rem] py-1 px-2.5">
+                        <i class="fa-solid fa-chalkboard"></i> Presentar
+                    </a>
+                    <a th:href="@{/main-panel(presentationId=${p.id()})}"
+                        class="sh-btn sh-btn-ghost text-[0.7rem] py-1 px-2.5">
+                        <i class="fa-solid fa-table-cells-large"></i> Panel
+                    </a>
+                    <a th:href="@{/presentations/{id}/generate-notes(id=${p.id()})}"
+                        class="sh-btn sh-btn-ghost text-[0.7rem] py-1 px-2.5">
+                        <i class="fa-solid fa-robot"></i> Notas IA
+                    </a>
+                    <form th:action="@{/presentations/{id}/delete(id=${p.id()})}" method="post" class="inline">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"
+                            th:if="${_csrf}">
+                        <button type="button" th:attr="data-presentation-name=${p.name()}"
+                            onclick="openDeleteModal(this)"
+                            class="sh-btn sh-btn-ghost text-[0.7rem] py-1 px-2.5 text-[var(--sh-red)]">
+                            <i class="fa-solid fa-trash"></i> Eliminar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="sh-overlay hidden" onclick="if(event.target===this)closeDeleteModal()">
+        <div class="sh-modal max-w-md w-[92%]">
+            <div class="flex items-center justify-between mb-4">
+                <div class="sh-label"><i class="fa-solid fa-triangle-exclamation mr-1"></i>CONFIRMAR ELIMINACIÓN</div>
+                <button type="button" class="sh-btn sh-btn-ghost text-xs" onclick="closeDeleteModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-sm text-[var(--sh-text-2)] mb-2">Vas a eliminar:</p>
+            <p id="delete-modal-name" class="font-mono text-xs text-[var(--sh-text-1)] mb-4"></p>
+            <p class="text-xs text-[var(--sh-text-3)] mb-5">Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end gap-2">
+                <button type="button" class="sh-btn text-xs" onclick="closeDeleteModal()">Cancelar</button>
+                <button type="button" class="sh-btn sh-btn-danger text-xs" onclick="confirmDelete()">
+                    <i class="fa-solid fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let deleteFormRef = null;
+
+        function openDeleteModal(button) {
+            deleteFormRef = button.closest('form');
+            const name = button.getAttribute('data-presentation-name') || 'Presentación';
+            document.getElementById('delete-modal-name').textContent = name;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.add('hidden');
+            deleteFormRef = null;
+        }
+
+        function confirmDelete() {
+            if (deleteFormRef) {
+                deleteFormRef.submit();
+            }
+        }
+    </script>
+</body>
+
+</html>

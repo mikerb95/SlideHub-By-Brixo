@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <!--
+        SlideHub Design System — Shared Head Assets
+        Usage: <th:block th:replace="~{fragments/head :: assets}"></th:block>
+
+        Includes:
+        - Tailwind CSS (CDN — migrate to standalone CLI for production builds)
+        - SlideHub Design System CSS (tokens, components, animations)
+        - Font Awesome 6.5 icons
+        - Tailwind theme config aligned with design tokens
+    -->
+    <th:block th:fragment="assets">
+        <!-- Tailwind CSS CDN -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sh: {
+                            void:     '#080b10',
+                            deep:     '#0d1117',
+                            surface:  '#111820',
+                            card:     '#151b23',
+                            elevated: '#1c2333',
+                            hover:    '#21293a',
+                        },
+                        accent: {
+                            green:        '#3fb950',
+                            'green-bright':'#56d364',
+                            blue:         '#58a6ff',
+                            'blue-bright':'#79c0ff',
+                            amber:        '#d29922',
+                            red:          '#f85149',
+                        }
+                    },
+                    fontFamily: {
+                        brand: ['Instrument Serif', 'Georgia', 'serif'],
+                        body:  ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono:  ['JetBrains Mono', 'Fira Code', 'monospace'],
+                    },
+                    borderRadius: {
+                        'tech':    '4px',
+                        'tech-sm': '3px',
+                        'tech-lg': '6px',
+                    },
+                    animation: {
+                        'node-ping': 'node-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+                        'glow':      'glow 2s ease-in-out infinite alternate',
+                        'glow-blue': 'glow-blue 2s ease-in-out infinite alternate',
+                        'fade-in':   'fade-in 0.5s ease both',
+                        'fade-in-up':'fade-in-up 0.6s ease both',
+                    },
+                    keyframes: {
+                        'node-ping': {
+                            '0%':        { transform: 'scale(1)',   opacity: '0.6' },
+                            '75%, 100%': { transform: 'scale(2.5)', opacity: '0'   },
+                        },
+                        'glow': {
+                            '0%':   { boxShadow: '0 0 4px rgba(63,185,80,0.15)' },
+                            '100%': { boxShadow: '0 0 16px rgba(63,185,80,0.25)' },
+                        },
+                        'glow-blue': {
+                            '0%':   { boxShadow: '0 0 4px rgba(88,166,255,0.15)' },
+                            '100%': { boxShadow: '0 0 16px rgba(88,166,255,0.25)' },
+                        },
+                        'fade-in': {
+                            from: { opacity: '0', transform: 'translateY(8px)' },
+                            to:   { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        'fade-in-up': {
+                            from: { opacity: '0', transform: 'translateY(16px)' },
+                            to:   { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+        </script>
+        <!-- SlideHub Design System -->
+        <link rel="stylesheet" th:href="@{/css/slidehub.css}">
+        <!-- Font Awesome Icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    </th:block>
+</body>
+
+</html>

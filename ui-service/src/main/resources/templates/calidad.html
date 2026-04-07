@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calidad y Cumplimiento — SlideHub</title>
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+    <style>
+        .guide-section {
+            scroll-margin-top: 72px;
+        }
+
+        .toc-link {
+            display: block;
+            padding: 0.24rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-family: var(--sh-font-mono);
+            color: var(--sh-text-3);
+            text-decoration: none;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .toc-link:hover {
+            color: var(--sh-blue);
+            background: rgba(88, 166, 255, 0.07);
+        }
+
+        .matrix-row {
+            display: grid;
+            grid-template-columns: 240px 120px 1fr;
+            gap: 0.55rem;
+            align-items: start;
+            padding: 0.62rem 0;
+            border-bottom: 1px solid var(--sh-border-subtle);
+            font-size: 0.74rem;
+        }
+
+        .matrix-row:last-child {
+            border-bottom: none;
+        }
+
+        .domain {
+            color: var(--sh-text-1);
+            font-family: var(--sh-font-mono);
+        }
+
+        .detail {
+            color: var(--sh-text-2);
+            line-height: 1.55;
+        }
+
+        .badge-red {
+            border: 1px solid rgba(248, 81, 73, 0.45);
+            color: #f85149;
+            background: rgba(248, 81, 73, 0.08);
+            font-family: var(--sh-font-mono);
+            font-size: 0.66rem;
+            border-radius: 4px;
+            padding: 0.08rem 0.42rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .badge-yellow {
+            border: 1px solid rgba(210, 153, 34, 0.45);
+            color: #d29922;
+            background: rgba(210, 153, 34, 0.08);
+            font-family: var(--sh-font-mono);
+            font-size: 0.66rem;
+            border-radius: 4px;
+            padding: 0.08rem 0.42rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .mini-title {
+            font-size: 0.67rem;
+            font-family: var(--sh-font-mono);
+            color: var(--sh-text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.35rem;
+        }
+
+        .risk-callout {
+            background: rgba(248, 81, 73, 0.08);
+            border-left: 3px solid #f85149;
+            border-radius: 0 6px 6px 0;
+            padding: 0.65rem 0.9rem;
+            font-size: 0.79rem;
+            color: var(--sh-text-2);
+            line-height: 1.58;
+        }
+
+        .tip-callout {
+            background: rgba(88, 166, 255, 0.08);
+            border-left: 3px solid var(--sh-blue);
+            border-radius: 0 6px 6px 0;
+            padding: 0.65rem 0.9rem;
+            font-size: 0.79rem;
+            color: var(--sh-text-2);
+            line-height: 1.58;
+        }
+
+        .phase-card {
+            border: 1px solid var(--sh-border);
+            border-radius: 6px;
+            background: var(--sh-deep);
+            padding: 0.78rem 0.86rem;
+        }
+
+        .phase-label {
+            font-family: var(--sh-font-mono);
+            color: var(--sh-text-1);
+            font-size: 0.69rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .phase-text {
+            font-size: 0.74rem;
+            color: var(--sh-text-2);
+            line-height: 1.55;
+        }
+
+        @media (max-width: 860px) {
+            .matrix-row {
+                grid-template-columns: 1fr;
+                gap: 0.35rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="sh antialiased">
+    <nav class="sh-nav" style="position:sticky;top:0;z-index:50;">
+        <div class="sh-nav-inner">
+            <div class="flex items-center gap-3">
+                <a href="/presentations" class="sh-btn sh-btn-ghost text-xs">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <span class="font-brand text-base">SlideHub</span>
+                <span class="text-[var(--sh-text-3)] text-xs">/</span>
+                <span class="font-mono text-xs text-[var(--sh-text-2)]">Calidad y Cumplimiento</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="sh-badge-blue text-xs">ISO · PDCA · PSP</span>
+                <span class="sh-badge text-xs">v1 diagnóstico</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 py-8 flex gap-8">
+
+        <aside class="hidden lg:block w-48 flex-shrink-0">
+            <div class="sticky top-20">
+                <div class="sh-label mb-3 text-xs">ÍNDICE</div>
+                <nav class="space-y-0.5">
+                    <a href="#resumen" class="toc-link">1. Resumen</a>
+                    <a href="#madurez" class="toc-link">2. Madurez de código</a>
+                    <a href="#matriz" class="toc-link">3. Matriz semáforo</a>
+                    <a href="#evidencia" class="toc-link">4. Evidencia</a>
+                    <a href="#pdca" class="toc-link">5. PDCA</a>
+                    <a href="#psp" class="toc-link">6. PSP</a>
+                    <a href="#backlog" class="toc-link">7. Backlog</a>
+                    <a href="#kpis" class="toc-link">8. KPIs</a>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="flex-1 min-w-0 space-y-8">
+
+            <section id="resumen" class="guide-section">
+                <div class="sh-card p-6 space-y-4">
+                    <div class="sh-label">DIAGNÓSTICO EJECUTIVO</div>
+                    <h1 class="font-brand text-3xl text-[var(--sh-text-1)]">Estado de calidad del proyecto</h1>
+                    <p class="text-sm text-[var(--sh-text-2)] leading-relaxed max-w-3xl">
+                        Esta vista consolida el análisis de cumplimiento para ISO/IEC 25000 (SQuaRE), ISO/IEC 25001,
+                        ISO/IEC 27001, ISO/IEC 12207, ISO/IEC 15504 (SPICE), ciclo PDCA y PSP. El objetivo es tener
+                        una referencia accionable para iterar controles sin romper el ritmo de entrega.
+                    </p>
+                    <div class="risk-callout">
+                        <strong>Riesgo prioritario actual:</strong> tokens OAuth2 almacenados en texto claro en base de
+                        datos.
+                        Esto impacta directamente la postura de seguridad frente a ISO/IEC 27001 y se mantiene como P0.
+                    </div>
+                </div>
+            </section>
+
+            <section id="madurez" class="guide-section">
+                <div class="sh-card p-6 space-y-4">
+                    <div class="sh-label"><i class="fa-solid fa-layer-group mr-1"></i>MADUREZ DEL CÓDIGO</div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="sh-badge-blue text-xs">Nivel actual: Intermedio</span>
+                        <span class="sh-badge text-xs">Escala interna M0–M4: M2</span>
+                    </div>
+                    <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                        El código mantiene una base estable para evolución: arquitectura por microservicios,
+                        convenciones claras y cobertura funcional en pruebas. Aún faltan prácticas de madurez más
+                        altas en seguridad de datos sensibles y estandarización formal de calidad por release.
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="phase-card">
+                            <div class="mini-title">Fortalezas vigentes</div>
+                            <ul class="text-xs text-[var(--sh-text-2)] leading-relaxed space-y-1 list-none">
+                                <li><i class="fa-solid fa-check mr-1 text-[var(--sh-blue)]"></i>Separación por servicio
+                                    y responsabilidades técnicas definidas.</li>
+                                <li><i class="fa-solid fa-check mr-1 text-[var(--sh-blue)]"></i>Endpoints de health,
+                                    smoke E2E y suites de test por módulo.</li>
+                                <li><i class="fa-solid fa-check mr-1 text-[var(--sh-blue)]"></i>Trazabilidad funcional
+                                    mediante historias y documentación activa.</li>
+                            </ul>
+                        </div>
+                        <div class="phase-card">
+                            <div class="mini-title">Brechas para subir a M3</div>
+                            <ul class="text-xs text-[var(--sh-text-2)] leading-relaxed space-y-1 list-none">
+                                <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-amber)]"></i>Cifrado
+                                    obligatorio de tokens OAuth2 persistidos.</li>
+                                <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-amber)]"></i>Definir umbrales
+                                    de calidad y criterio de aprobación por release.</li>
+                                <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-amber)]"></i>Auditoría
+                                    periódica de deuda técnica y acciones cerradas.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="matriz" class="guide-section">
+                <div class="sh-card p-6">
+                    <div class="sh-label mb-3"><i class="fa-solid fa-table-list mr-1"></i>MATRIZ DE CUMPLIMIENTO</div>
+
+                    <div class="matrix-row">
+                        <div class="domain">ISO/IEC 25000 (SQuaRE)</div>
+                        <div><span class="badge-yellow">🟡 PARCIAL</span></div>
+                        <div class="detail">Hay requisitos y trazabilidad documentados, pero sin un modelo formal de
+                            calidad con umbrales por característica.</div>
+                    </div>
+                    <div class="matrix-row">
+                        <div class="domain">ISO/IEC 25001</div>
+                        <div><span class="badge-red">🔴 BAJO</span></div>
+                        <div class="detail">Existen validaciones puntuales, pero no hay plan institucional de evaluación
+                            de calidad por release.</div>
+                    </div>
+                    <div class="matrix-row">
+                        <div class="domain">ISO/IEC 27001</div>
+                        <div><span class="badge-yellow">🟡 PARCIAL</span></div>
+                        <div class="detail">Buenas prácticas en autenticación, secretos y rate limiting; brecha crítica
+                            en cifrado de tokens OAuth2 persistidos.</div>
+                    </div>
+                    <div class="matrix-row">
+                        <div class="domain">ISO/IEC 12207</div>
+                        <div><span class="badge-yellow">🟡 PARCIAL</span></div>
+                        <div class="detail">Se trabaja por fases y sprints con responsabilidades claras, pero faltan
+                            artefactos formales de cierre por fase.</div>
+                    </div>
+                    <div class="matrix-row">
+                        <div class="domain">ISO/IEC 15504 (SPICE)</div>
+                        <div><span class="badge-red">🔴 BAJO</span></div>
+                        <div class="detail">No existe evaluación formal de capacidad de procesos ni baseline de madurez.
+                        </div>
+                    </div>
+                    <div class="matrix-row">
+                        <div class="domain">PDCA</div>
+                        <div><span class="badge-yellow">🟡 PARCIAL</span></div>
+                        <div class="detail">Se observan ciclos prácticos de mejora, pero no estandarizados con plantilla
+                            y métricas de cierre.</div>
+                    </div>
+                    <div class="matrix-row">
+                        <div class="domain">PSP</div>
+                        <div><span class="badge-red">🔴 BAJO</span></div>
+                        <div class="detail">No hay registro individual sistemático de estimación, tiempo real y defectos
+                            por fase.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="evidencia" class="guide-section">
+                <div class="sh-card p-6 space-y-4">
+                    <div class="sh-label"><i class="fa-solid fa-folder-open mr-1"></i>EVIDENCIA EN EL REPOSITORIO</div>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="phase-card">
+                            <div class="mini-title">Requisitos y trazabilidad</div>
+                            <div class="phase-text">
+                                `docs/Requerimientos-Funcionales-y-No-Funcionales-SlideHub.md`, `AGENTS.md`,
+                                `docs/Historias de Usuario - SlideHub.csv`
+                            </div>
+                        </div>
+                        <div class="phase-card">
+                            <div class="mini-title">Seguridad aplicada</div>
+                            <div class="phase-text">
+                                `ui-service/.../SecurityConfig.java`,
+                                `gateway-service/.../GatewayRateLimitService.java`
+                            </div>
+                        </div>
+                        <div class="phase-card">
+                            <div class="mini-title">Pruebas y verificación</div>
+                            <div class="phase-text">
+                                `docs/SMOKE-E2E.md`, `.github/workflows/smoke-e2e.yml`,
+                                tests en `ui-service`, `gateway-service`, `ai-service`, `state-service`.
+                            </div>
+                        </div>
+                        <div class="phase-card">
+                            <div class="mini-title">Brecha 27001 (P0)</div>
+                            <div class="phase-text">
+                                `ui-service/.../V1__create_users.sql` + entidad `User` + servicios OAuth2 con
+                                persistencia directa de token.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pdca" class="guide-section">
+                <div class="sh-card p-6 space-y-4">
+                    <div class="sh-label"><i class="fa-solid fa-rotate mr-1"></i>PDCA ACTUAL (EN PRÁCTICA)</div>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="phase-card">
+                            <div class="phase-label">PLAN</div>
+                            <div class="phase-text">Definición de alcance, historias y criterios de aceptación por
+                                fase/sprint.</div>
+                        </div>
+                        <div class="phase-card">
+                            <div class="phase-label">DO</div>
+                            <div class="phase-text">Implementación por microservicio con responsabilidades técnicas
+                                separadas.</div>
+                        </div>
+                        <div class="phase-card">
+                            <div class="phase-label">CHECK</div>
+                            <div class="phase-text">Smoke E2E, health checks, pruebas unitarias y de integración
+                                básicas.</div>
+                        </div>
+                        <div class="phase-card">
+                            <div class="phase-label">ACT</div>
+                            <div class="phase-text">Correcciones de rutas y migraciones idempotentes ante hallazgos
+                                operativos.</div>
+                        </div>
+                    </div>
+                    <div class="tip-callout">
+                        Siguiente iteración recomendada: formalizar una plantilla de incidente PDCA con causa raíz,
+                        evidencia de verificación y estandarización obligatoria.
+                    </div>
+                </div>
+            </section>
+
+            <section id="psp" class="guide-section">
+                <div class="sh-card p-6 space-y-3">
+                    <div class="sh-label"><i class="fa-solid fa-user-gear mr-1"></i>PSP (PERSONAL SOFTWARE PROCESS)
+                    </div>
+                    <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                        El proyecto no registra aún disciplina PSP formal. Para alinearlo, se requiere una bitácora
+                        individual mínima por tarea:
+                        estimación inicial, tiempo real invertido y defectos detectados por fase (codificación,
+                        revisión, pruebas).
+                    </p>
+                    <div class="phase-card">
+                        <div class="mini-title">Primer paso de adopción</div>
+                        <div class="phase-text">Piloto de 2 sprints con plantilla ligera por desarrollador y revisión
+                            semanal de desviaciones.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="backlog" class="guide-section">
+                <div class="sh-card p-6 space-y-4">
+                    <div class="sh-label"><i class="fa-solid fa-list-check mr-1"></i>BACKLOG PRIORIZADO</div>
+
+                    <div class="phase-card">
+                        <div class="phase-label">P0 · ESTA SEMANA</div>
+                        <ul class="text-xs text-[var(--sh-text-2)] leading-relaxed space-y-1 list-none">
+                            <li><i class="fa-solid fa-triangle-exclamation mr-1 text-[var(--sh-red)]"></i>Cifrar en
+                                reposo `github_access_token` y `google_refresh_token`.</li>
+                            <li><i class="fa-solid fa-file-pen mr-1 text-[var(--sh-red)]"></i>Alinear documentación con
+                                evidencia real de controles de seguridad.</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase-card">
+                        <div class="phase-label">P1 · 1 A 2 SEMANAS</div>
+                        <ul class="text-xs text-[var(--sh-text-2)] leading-relaxed space-y-1 list-none">
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-blue)]"></i>Crear plan formal de
+                                evaluación de calidad (ISO/IEC 25001).</li>
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-blue)]"></i>Formalizar plantilla
+                                PDCA para incidentes/retrabajo.</li>
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-blue)]"></i>Definir KPIs
+                                operativos de calidad y umbrales por release.</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase-card">
+                        <div class="phase-label">P2 · 2 A 4 SEMANAS</div>
+                        <ul class="text-xs text-[var(--sh-text-2)] leading-relaxed space-y-1 list-none">
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-amber)]"></i>Autoevaluación de
+                                capacidad de proceso alineada a SPICE.</li>
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-amber)]"></i>Adopción gradual de
+                                PSP ligero por desarrollador.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="kpis" class="guide-section">
+                <div class="sh-card p-6 space-y-3">
+                    <div class="sh-label"><i class="fa-solid fa-chart-line mr-1"></i>KPIS PROPUESTOS (PRIMER CORTE)
+                    </div>
+                    <ul class="text-sm text-[var(--sh-text-2)] leading-relaxed space-y-1 list-none">
+                        <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-blue)]"></i><strong
+                                class="text-[var(--sh-text-1)]">Seguridad:</strong> % tokens cifrados en reposo
+                            (objetivo 100%).</li>
+                        <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-blue)]"></i><strong
+                                class="text-[var(--sh-text-1)]">Confiabilidad:</strong> éxito smoke E2E por ejecución
+                            (objetivo ≥95%).</li>
+                        <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-blue)]"></i><strong
+                                class="text-[var(--sh-text-1)]">Proceso:</strong> % historias con evidencia de prueba
+                            (objetivo 100%).</li>
+                        <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-blue)]"></i><strong
+                                class="text-[var(--sh-text-1)]">PSP:</strong> desviación estimado/real por tarea
+                            (objetivo inicial ±25%).</li>
+                    </ul>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+</body>
+
+</html>

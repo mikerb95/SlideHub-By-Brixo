@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SlideHub — Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #slide-view,
+        #url-view {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #slide-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        #url-view {
+            display: none;
+        }
+
+        #url-view iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Botón "Volver al Slide X" — flotante, visible solo en modo url (Fase 4 tarea 40) */
+        #btn-return {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 100;
+            background: rgba(29, 78, 216, 0.92);
+            backdrop-filter: blur(6px);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            transition: background 0.15s;
+        }
+
+        #btn-return.visible {
+            display: flex;
+        }
+
+        #btn-return:hover {
+            background: rgba(30, 64, 175, 0.95);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="slide-view"></div>
+    <div id="url-view">
+        <iframe id="demo-iframe" src="about:blank" allowfullscreen></iframe>
+    </div>
+
+    <!-- Botón de retorno a slide (Fase 4 tarea 40) -->
+    <button id="btn-return" onclick="returnToSlide()">
+        <i class="fa fa-arrow-left"></i>
+        <span id="return-label">Volver a Slides</span>
+    </button>
+
+    <script th:inline="javascript">
+        const POLL_INTERVAL_MS = /*[[${pollIntervalMs}]]*/ 800;
+        const API_DEMO_URL = '/api/demo';
+        const API_SLIDE_URL = '/api/slide';
+        const PRESENTATION_ID = /*[[${presentationId}]]*/ '';
+        const SLIDES_CATALOG_API = PRESENTATION_ID ? `/api/presentations/${PRESENTATION_ID}/slides` : '';
+
+        let currentMode = null;
+        let currentSlide = 0;
+        let totalSlides = 0;
+        let currentUrl = null;
+        let slideUrls = [];
+
+        const slideView = document.getElementById('slide-view');
+        const urlView = document.getElementById('url-view');
+        const iframe = document.getElementById('demo-iframe');
+        const btnReturn = document.getElementById('btn-return');
+        const returnLabel = document.getElementById('return-label');
+
+        function buildSlides(total) {
+            slideView.innerHTML = '';
+            for (let i = 1; i <= total; i++) {
+                const img = document.createElement('img');
+                const url = slideUrls[i - 1] || `/presentation/Slide${i}.PNG`;
+                img.src = url;
+                img.alt = `Slide ${i}`;
+                img.className = 'slide';
+                img.id = `demo-slide-${i}`;
+                slideView.appendChild(img);
+            }
+        }
+
+        async function loadSlidesCatalog() {
+            if (!SLIDES_CATALOG_API) {
+                slideUrls = [];
+                return;
+            }
+            try {
+                const res = await fetch(SLIDES_CATALOG_API);
+                if (!res.ok) {
+                    slideUrls = [];
+                    return;
+                }
+                const data = await res.json();
+                slideUrls = (data.slides || [])
+                    .sort((a, b) => a.number - b.number)
+                    .map(slide => slide.s3Url || `/presentation/Slide${slide.number}.PNG`);
+                if (slideUrls.length > 0) {
+                    totalSlides = slideUrls.length;
+                    buildSlides(totalSlides);
+                }
+            } catch (_) {
+                slideUrls = [];
+            }
+        }
+
+        function showSlide(n) {
+            document.querySelectorAll('.slide.active').forEach(el => el.classList.remove('active'));
+            const s = document.getElementById(`demo-slide-${n}`);
+            if (s) s.classList.add('active');
+        }
+
+        async function poll() {
+            try {
+                const [demoRes, slideRes] = await Promise.all([
+                    fetch(API_DEMO_URL),
+                    fetch(API_SLIDE_URL)
+                ]);
+                if (!demoRes.ok || !slideRes.ok) return;
+                const demo = await demoRes.json();
+                const slideData = await slideRes.json();
+
+                const effectiveTotal = slideUrls.length > 0 ? slideUrls.length : slideData.totalSlides;
+                if (effectiveTotal !== totalSlides) {
+                    totalSlides = effectiveTotal;
+                    buildSlides(totalSlides);
+                }
+
+                if (demo.mode === 'url') {
+                    if (currentMode !== 'url' || demo.url !== currentUrl) {
+                        currentMode = 'url';
+                        currentUrl = demo.url;
+                        slideView.style.display = 'none';
+                        urlView.style.display = 'block';
+                        iframe.src = demo.url;
+                    }
+                    // Mostrar botón de retorno con número de slide si está disponible
+                    const rs = demo.returnSlide;
+                    returnLabel.textContent = rs ? `Volver al Slide ${rs}` : 'Volver a Slides';
+                    btnReturn.classList.add('visible');
+                } else {
+                    // mode === 'slides'
+                    btnReturn.classList.remove('visible');
+                    if (currentMode !== 'slides') {
+                        currentMode = 'slides';
+                        urlView.style.display = 'none';
+                        iframe.src = 'about:blank';
+                        slideView.style.display = 'flex';
+                    }
+                    const targetSlide = demo.slide ?? slideData.slide;
+                    if (targetSlide !== currentSlide) {
+                        currentSlide = targetSlide;
+                        showSlide(currentSlide);
+                    }
+                }
+            } catch (_) { }
+        }
+
+        /** Solicita al servidor volver al modo slides (state-service restaura returnSlide). */
+        async function returnToSlide() {
+            try {
+                await fetch(API_DEMO_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: 'slides' })
+                });
+                btnReturn.classList.remove('visible');
+            } catch (_) { }
+        }
+
+        loadSlidesCatalog().finally(poll);
+        setInterval(poll, POLL_INTERVAL_MS);
+    </script>
+</body>
+
+</html>

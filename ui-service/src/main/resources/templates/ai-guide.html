@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía del Microservicio IA — SlideHub</title>
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+    <style>
+        .guide-section {
+            scroll-margin-top: 64px;
+        }
+
+        .pipeline-wrap {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+        }
+
+        .pipeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            flex: 1;
+            min-width: 90px;
+        }
+
+        .pipeline-arrow {
+            color: var(--sh-text-3);
+            font-size: 1rem;
+            flex-shrink: 0;
+            padding: 0 0.2rem;
+            padding-top: 0.55rem;
+        }
+
+        .pipeline-box {
+            width: 100%;
+            border: 1px solid var(--sh-border);
+            border-radius: 6px;
+            padding: 0.45rem 0.5rem;
+            background: var(--sh-deep);
+            font-size: 0.68rem;
+            font-family: var(--sh-font-mono);
+            text-align: center;
+            line-height: 1.4;
+            color: var(--sh-text-1);
+        }
+
+        .pipeline-box.blue {
+            border-color: rgba(88, 166, 255, 0.5);
+            background: rgba(88, 166, 255, 0.07);
+            color: #58a6ff;
+        }
+
+        .pipeline-box.green {
+            border-color: rgba(63, 185, 80, 0.5);
+            background: rgba(63, 185, 80, 0.07);
+            color: #3fb950;
+        }
+
+        .pipeline-box.amber {
+            border-color: rgba(210, 153, 34, 0.5);
+            background: rgba(210, 153, 34, 0.07);
+            color: #d29922;
+        }
+
+        .pipeline-box.purple {
+            border-color: rgba(163, 113, 247, 0.5);
+            background: rgba(163, 113, 247, 0.07);
+            color: #a371f7;
+        }
+
+        .pipeline-label {
+            font-size: 0.6rem;
+            color: var(--sh-text-3);
+            font-family: var(--sh-font-mono);
+            text-align: center;
+        }
+
+        .method-post {
+            color: var(--sh-amber);
+            font-weight: 600;
+        }
+
+        .method-get {
+            color: var(--sh-green);
+            font-weight: 600;
+        }
+
+        .method-delete {
+            color: #f85149;
+            font-weight: 600;
+        }
+
+        .toc-link {
+            display: block;
+            padding: 0.22rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-family: var(--sh-font-mono);
+            color: var(--sh-text-3);
+            text-decoration: none;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .toc-link:hover {
+            color: var(--sh-blue);
+            background: rgba(88, 166, 255, 0.06);
+        }
+
+        .code-block {
+            background: var(--sh-deep);
+            border: 1px solid var(--sh-border);
+            border-radius: 6px;
+            padding: 0.9rem 1rem;
+            font-family: var(--sh-font-mono);
+            font-size: 0.7rem;
+            color: var(--sh-text-2);
+            white-space: pre;
+            overflow-x: auto;
+            line-height: 1.65;
+        }
+
+        .note-callout {
+            background: rgba(88, 166, 255, 0.07);
+            border-left: 3px solid var(--sh-blue);
+            border-radius: 0 6px 6px 0;
+            padding: 0.65rem 0.9rem;
+            font-size: 0.78rem;
+            color: var(--sh-text-2);
+            line-height: 1.6;
+        }
+
+        .tip-callout {
+            background: rgba(63, 185, 80, 0.07);
+            border-left: 3px solid var(--sh-green);
+            border-radius: 0 6px 6px 0;
+            padding: 0.65rem 0.9rem;
+            font-size: 0.78rem;
+            color: var(--sh-text-2);
+            line-height: 1.6;
+        }
+
+        .warn-callout {
+            background: rgba(210, 153, 34, 0.07);
+            border-left: 3px solid var(--sh-amber);
+            border-radius: 0 6px 6px 0;
+            padding: 0.65rem 0.9rem;
+            font-size: 0.78rem;
+            color: var(--sh-text-2);
+            line-height: 1.6;
+        }
+
+        .ep-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr;
+            gap: 0.5rem;
+            align-items: start;
+            padding: 0.55rem 0;
+            border-bottom: 1px solid var(--sh-border-subtle);
+            font-size: 0.72rem;
+        }
+
+        .ep-row:last-child {
+            border-bottom: none;
+        }
+
+        .ep-path {
+            font-family: var(--sh-font-mono);
+            color: var(--sh-text-1);
+        }
+
+        .ep-desc {
+            color: var(--sh-text-2);
+        }
+
+        .field-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: baseline;
+            padding: 0.3rem 0;
+            border-bottom: 1px solid var(--sh-border-subtle);
+            font-size: 0.72rem;
+        }
+
+        .field-row:last-child {
+            border-bottom: none;
+        }
+
+        .field-name {
+            font-family: var(--sh-font-mono);
+            color: var(--sh-blue);
+            min-width: 150px;
+            flex-shrink: 0;
+        }
+
+        .field-type {
+            font-family: var(--sh-font-mono);
+            color: var(--sh-amber);
+            min-width: 80px;
+            flex-shrink: 0;
+        }
+
+        .field-desc {
+            color: var(--sh-text-2);
+        }
+
+        @media (max-width: 1024px) {
+            .guide-layout {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .guide-aside {
+                display: none;
+            }
+
+            .guide-content {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .guide-nav {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                justify-content: flex-start;
+            }
+
+            .guide-nav-badges {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .ep-row {
+                grid-template-columns: 1fr;
+                gap: 0.25rem;
+            }
+
+            .field-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.2rem;
+            }
+
+            .field-name,
+            .field-type {
+                min-width: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="sh antialiased">
+
+    <!-- Nav -->
+    <nav class="sh-nav" style="position:sticky;top:0;z-index:50;">
+        <div class="sh-nav-inner guide-nav">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="/presentations" class="sh-btn sh-btn-ghost text-xs">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <span class="font-brand text-sm sm:text-base">SlideHub</span>
+                <span class="text-[var(--sh-text-3)] text-xs hidden sm:inline">/</span>
+                <span class="font-mono text-[0.68rem] sm:text-xs text-[var(--sh-text-2)]">Guía del microservicio
+                    IA</span>
+            </div>
+            <div class="guide-nav-badges flex items-center gap-2">
+                <span class="sh-badge-blue text-xs">ai-service</span>
+                <span class="sh-badge text-xs">puerto 8083</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-layout max-w-5xl mx-auto px-4 py-8 flex gap-8">
+
+        <!-- Sidebar índice -->
+        <aside class="guide-aside hidden lg:block w-44 flex-shrink-0">
+            <div class="sticky top-20">
+                <div class="sh-label mb-3 text-xs">ÍNDICE</div>
+                <nav class="space-y-0.5">
+                    <a href="#que-es" class="toc-link">1. ¿Qué es?</a>
+                    <a href="#arquitectura" class="toc-link">2. Arquitectura</a>
+                    <a href="#modelos" class="toc-link">3. Los modelos de IA</a>
+                    <a href="#notas" class="toc-link">4. Notas del presentador</a>
+                    <a href="#repo" class="toc-link">5. Análisis de repositorio</a>
+                    <a href="#deploy" class="toc-link">6. Deploy Tutor</a>
+                    <a href="#audio" class="toc-link">7. Asistente de audio</a>
+                    <a href="#mongodb" class="toc-link">8. Base de datos</a>
+                    <a href="#endpoints" class="toc-link">9. Endpoints</a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Contenido -->
+        <main class="guide-content flex-1 min-w-0 space-y-8">
+
+            <!-- Encabezado -->
+            <div>
+                <div class="sh-label mb-2">GUÍA TÉCNICA PARA ESTUDIANTES</div>
+                <h1 class="font-brand text-3xl text-[var(--sh-text-1)] mb-3">ai-service</h1>
+                <p class="text-[var(--sh-text-2)] text-sm leading-relaxed max-w-2xl">
+                    Este documento explica cómo funciona el microservicio de inteligencia artificial de SlideHub:
+                    qué hace, cómo fluye la información entre los modelos, y cómo se almacena el resultado.
+                    Está escrito para alguien que ya sabe programar pero que ve este código por primera vez.
+                </p>
+            </div>
+
+            <!-- ══════════════════════════════════════
+             1. ¿QUÉ ES?
+        ══════════════════════════════════════ -->
+            <section id="que-es" class="guide-section sh-card p-6 space-y-4">
+                <div class="sh-label"><i class="fa-solid fa-circle-info mr-1"></i>¿QUÉ ES EL AI-SERVICE?</div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    <code class="font-mono text-[var(--sh-blue)]">ai-service</code> es uno de los cuatro microservicios
+                    de SlideHub.
+                    Su única responsabilidad es <strong class="text-[var(--sh-text-1)]">coordinar llamadas a modelos de
+                        IA externos</strong>
+                    y persistir los resultados en MongoDB para no tener que regenerarlos cada vez.
+                </p>
+
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="p-3 rounded-tech bg-[var(--sh-deep)] border border-[var(--sh-border)]">
+                        <div class="text-xs font-mono text-[var(--sh-blue)] mb-2">Recibe</div>
+                        <ul class="text-xs text-[var(--sh-text-2)] space-y-1 leading-relaxed list-none">
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-text-3)]"></i>URLs de imágenes de
+                                slides (alojadas en S3)</li>
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-text-3)]"></i>URLs de repositorios
+                                GitHub</li>
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-text-3)]"></i>Archivos de audio de
+                                participantes</li>
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-text-3)]"></i>Plataforma de
+                                despliegue objetivo</li>
+                        </ul>
+                    </div>
+                    <div class="p-3 rounded-tech bg-[var(--sh-deep)] border border-[var(--sh-border)]">
+                        <div class="text-xs font-mono text-[var(--sh-green)] mb-2">Produce</div>
+                        <ul class="text-xs text-[var(--sh-text-2)] space-y-1 leading-relaxed list-none">
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-text-3)]"></i>Notas estructuradas
+                                por slide</li>
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-text-3)]"></i>Análisis técnico del
+                                repositorio</li>
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-text-3)]"></i>Dockerfiles y guías
+                                de despliegue</li>
+                            <li><i class="fa-solid fa-angle-right mr-1 text-[var(--sh-text-3)]"></i>Respuestas en audio
+                                a preguntas del público</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="note-callout">
+                    <strong>¿Por qué separarlo en su propio servicio?</strong><br>
+                    Las llamadas a Gemini y Groq tardan entre 2 y 15 segundos y tienen costo por uso.
+                    Al aislarlas en un servicio propio: el resto de la app no se bloquea esperando,
+                    se puede escalar independientemente, y los resultados se cachean en MongoDB
+                    para evitar pagar dos veces por la misma generación.
+                </div>
+            </section>
+
+            <!-- ══════════════════════════════════════
+             2. ARQUITECTURA
+        ══════════════════════════════════════ -->
+            <section id="arquitectura" class="guide-section sh-card p-6 space-y-4">
+                <div class="sh-label"><i class="fa-solid fa-diagram-project mr-1"></i>ARQUITECTURA DEL SISTEMA</div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    SlideHub tiene cuatro microservicios. Todos los pedidos externos llegan primero al
+                    <code class="font-mono text-[var(--sh-amber)]">gateway-service</code>, que decide a qué servicio
+                    enrutar.
+                    El <code class="font-mono text-[var(--sh-blue)]">ai-service</code> nunca recibe tráfico directo del
+                    navegador.
+                </p>
+
+                <div class="code-block">Navegador / Dispositivo
+                    │
+                    ▼
+                    ┌──────────────────────────────────────────────────────────────┐
+                    │ gateway-service (puerto 8080) │
+                    │ · Enruta las solicitudes │
+                    │ · Aplica rate limiting a endpoints sensibles │
+                    └────┬───────────────┬──────────────────┬───────────────────── ┘
+                    │ │ │
+                    ▼ ▼ ▼
+                    ui-service state-service ai-service
+                    :8082 :8081 :8083
+                    · Vistas · Slide actual · Gemini API
+                    · Auth · Estado demo · Groq API
+                    · S3 · Redis · MongoDB</div>
+
+                <div class="tip-callout">
+                    El <code class="font-mono">gateway-service</code> aplica reglas de rate limiting específicas para
+                    los endpoints de IA
+                    (máximo 5–6 llamadas por minuto por IP) para controlar el costo de las APIs externas.
+                </div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    Internamente, el <code class="font-mono text-[var(--sh-blue)]">ai-service</code> tiene esta
+                    estructura:
+                </p>
+
+                <div class="code-block">ai-service/
+                    controller/
+                    NotesController.java → /api/ai/notes/**
+                    RepoAnalysisController.java → /api/ai/analyze-repo
+                    DeployTutorController.java → /api/ai/deploy/**
+                    AssistController.java → /api/ai/assist/audio
+                    service/
+                    GeminiService.java → llamadas HTTP a Google Gemini
+                    GroqService.java → llamadas HTTP a Groq (LLM + Whisper)
+                    NotesService.java → lógica del pipeline de notas
+                    RepoAnalysisService.java → lógica del análisis de repos
+                    DeploymentService.java → lógica de generación de guías
+                    AssistService.java → lógica del asistente de audio
+                    model/
+                    PresenterNote.java → documento MongoDB (notas)
+                    RepoAnalysis.java → documento MongoDB (análisis)
+                    DeploymentGuide.java → documento MongoDB (guías)</div>
+            </section>
+
+            <!-- ══════════════════════════════════════
+             3. LOS MODELOS DE IA
+        ══════════════════════════════════════ -->
+            <section id="modelos" class="guide-section sh-card p-6 space-y-4">
+                <div class="sh-label"><i class="fa-solid fa-robot mr-1"></i>LOS MODELOS DE IA</div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    El servicio usa <strong class="text-[var(--sh-text-1)]">dos proveedores distintos</strong>, cada uno
+                    con sus fortalezas.
+                    Ambos se consumen via HTTP con <code class="font-mono text-[var(--sh-amber)]">WebClient</code> — sin
+                    SDKs oficiales.
+                </p>
+
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <!-- Gemini -->
+                    <div class="p-4 rounded-tech bg-[var(--sh-deep)] border border-[rgba(88,166,255,0.3)]">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="sh-badge-blue text-xs">Google Gemini</span>
+                            <span class="font-mono text-xs text-[var(--sh-text-3)]">gemini-1.5-flash</span>
+                        </div>
+                        <p class="text-xs text-[var(--sh-text-2)] leading-relaxed mb-3">
+                            Modelo multimodal: puede recibir texto <strong>e imágenes</strong> en la misma solicitud.
+                            Se usa cuando hay que "ver" el contenido visual de un slide.
+                        </p>
+                        <div class="text-xs font-mono text-[var(--sh-text-3)] mb-1">Úsado para:</div>
+                        <ul class="text-xs text-[var(--sh-text-2)] space-y-1 list-none">
+                            <li><i class="fa-solid fa-eye mr-1 text-[var(--sh-blue)]"></i>Analizar imagen de un slide
+                                (Vision)</li>
+                            <li><i class="fa-solid fa-code-branch mr-1 text-[var(--sh-blue)]"></i>Extraer contexto
+                                técnico de un repositorio</li>
+                            <li><i class="fa-solid fa-magnifying-glass mr-1 text-[var(--sh-blue)]"></i>Análisis profundo
+                                del stack tecnológico</li>
+                        </ul>
+                    </div>
+                    <!-- Groq -->
+                    <div class="p-4 rounded-tech bg-[var(--sh-deep)] border border-[rgba(210,153,34,0.3)]">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="sh-badge text-xs" style="color:var(--sh-amber)">Groq</span>
+                            <span class="font-mono text-xs text-[var(--sh-text-3)]">llama3-8b + whisper</span>
+                        </div>
+                        <p class="text-xs text-[var(--sh-text-2)] leading-relaxed mb-3">
+                            Inferencia ultrarrápida (tokens/seg muy altos) para generación de texto estructurado
+                            y transcripción de audio con Whisper.
+                        </p>
+                        <div class="text-xs font-mono text-[var(--sh-text-3)] mb-1">Úsado para:</div>
+                        <ul class="text-xs text-[var(--sh-text-2)] space-y-1 list-none">
+                            <li><i class="fa-solid fa-file-lines mr-1 text-[var(--sh-amber)]"></i>Generar notas del
+                                presentador (JSON)</li>
+                            <li><i class="fa-solid fa-microphone mr-1 text-[var(--sh-amber)]"></i>Transcribir audio
+                                (Whisper large-v3)</li>
+                            <li><i class="fa-solid fa-docker mr-1 text-[var(--sh-amber)]"></i>Generar Dockerfiles y
+                                guías de deploy</li>
+                            <li><i class="fa-solid fa-comment mr-1 text-[var(--sh-amber)]"></i>Responder preguntas del
+                                público</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="warn-callout">
+                    <strong>Importante para la comprensión del código:</strong>
+                    Groq expone una API compatible con OpenAI (<code
+                        class="font-mono">/openai/v1/chat/completions</code>).
+                    Esto significa que aunque usamos Groq, el formato de request y response es idéntico al de OpenAI.
+                    Si alguna vez migramos a OpenAI, solo cambia la URL y el API key.
+                </div>
+            </section>
+
+            <!-- ══════════════════════════════════════
+             4. NOTAS DEL PRESENTADOR
+        ══════════════════════════════════════ -->
+            <section id="notas" class="guide-section sh-card p-6 space-y-4">
+                <div class="sh-label"><i class="fa-solid fa-clipboard-list mr-1"></i>PIPELINE: NOTAS DEL PRESENTADOR
+                </div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    Este es el pipeline principal. Toma un slide y genera notas estructuradas listas para que el
+                    presentador
+                    las lea durante la charla. Funciona en tres pasos secuenciales, donde cada paso alimenta al
+                    siguiente.
+                </p>
+
+                <!-- Pipeline visual -->
+                <div class="pipeline-wrap">
+                    <div class="pipeline-step">
+                        <div class="pipeline-box blue">Paso 1<br>Gemini Vision</div>
+                        <div class="pipeline-label">Analiza la imagen<br>del slide</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box blue">Paso 2<br>Gemini Text</div>
+                        <div class="pipeline-label">Extrae contexto<br>del repositorio</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box amber">Paso 3<br>Groq LLM</div>
+                        <div class="pipeline-label">Genera la nota<br>estructurada (JSON)</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box green">MongoDB</div>
+                        <div class="pipeline-label">Persiste la nota<br>(upsert)</div>
+                    </div>
+                </div>
+
+                <!-- Paso a paso -->
+                <div class="space-y-3 mt-2">
+                    <div class="p-3 rounded-tech bg-[var(--sh-deep)] border border-[var(--sh-border)]">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="sh-badge-blue text-xs">Paso 1</span>
+                            <span class="font-mono text-xs text-[var(--sh-text-1)]">resolveSlideDescription()</span>
+                        </div>
+                        <p class="text-xs text-[var(--sh-text-2)] leading-relaxed">
+                            Si el request incluye una imagen (Base64 o URL de S3), se descarga y se envía a
+                            <strong>Gemini Vision</strong> para que describa qué ve: título, conceptos técnicos
+                            visibles,
+                            tipo de diagrama, etc. Si no hay imagen, se usa el texto descriptivo enviado en el campo
+                            <code class="font-mono">slideContext</code> como fallback.
+                        </p>
+                    </div>
+                    <div class="p-3 rounded-tech bg-[var(--sh-deep)] border border-[var(--sh-border)]">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="sh-badge-blue text-xs">Paso 2</span>
+                            <span class="font-mono text-xs text-[var(--sh-text-1)]">extractRepoContext()</span>
+                        </div>
+                        <p class="text-xs text-[var(--sh-text-2)] leading-relaxed">
+                            Con la descripción del slide del paso 1, Gemini visita el repositorio GitHub indicado y
+                            extrae
+                            el contenido más relevante para ese slide concreto: archivos relacionados, patrones de
+                            código,
+                            configuraciones, etc. Si no hay repositorio, este paso se omite.
+                        </p>
+                    </div>
+                    <div class="p-3 rounded-tech bg-[var(--sh-deep)] border border-[var(--sh-border)]">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="sh-badge text-xs" style="color:var(--sh-amber)">Paso 3</span>
+                            <span class="font-mono text-xs text-[var(--sh-text-1)]">generateNote()</span>
+                        </div>
+                        <p class="text-xs text-[var(--sh-text-2)] leading-relaxed">
+                            Groq recibe el contexto de los dos pasos anteriores y genera una nota estructurada
+                            en formato JSON con: título, puntos clave, tiempo sugerido, frases clave y tags de demo.
+                            Groq tiene restricción explícita de responder solo JSON válido.
+                        </p>
+                    </div>
+                </div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    La nota resultante tiene esta forma en MongoDB:
+                </p>
+                <div class="code-block">{
+                    "presentationId": "abc-123",
+                    "slideNumber": 3,
+                    "title": "Arquitectura de microservicios",
+                    "points": [
+                    "Cada servicio tiene una responsabilidad única",
+                    "Comunicación via HTTP REST con WebClient",
+                    "El gateway centraliza el enrutamiento"
+                    ],
+                    "suggestedTime": "~3 min",
+                    "keyPhrases": ["principio de responsabilidad única", "gateway pattern"],
+                    "demoTags": ["demo-gateway-routing"]
+                    }</div>
+
+                <div class="note-callout">
+                    <strong>¿Qué pasa si ya existe una nota para ese slide?</strong><br>
+                    El servicio hace un <em>upsert</em>: busca si ya existe una nota con el mismo
+                    <code class="font-mono">presentationId + slideNumber</code>. Si existe, la reemplaza
+                    preservando el mismo <code class="font-mono">_id</code> de MongoDB.
+                    Si no existe, crea una nueva.
+                </div>
+            </section>
+
+            <!-- ══════════════════════════════════════
+             5. ANÁLISIS DE REPOSITORIO
+        ══════════════════════════════════════ -->
+            <section id="repo" class="guide-section sh-card p-6 space-y-4">
+                <div class="sh-label"><i class="fa-brands fa-github mr-1"></i>ANÁLISIS DE REPOSITORIO</div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    Antes de generar notas o guías de deploy, el sistema necesita entender el repositorio.
+                    Este proceso analiza el repo GitHub con Gemini y guarda el resultado en MongoDB como caché.
+                </p>
+
+                <!-- Pipeline con cache -->
+                <div class="pipeline-wrap">
+                    <div class="pipeline-step">
+                        <div class="pipeline-box">Request<br>repoUrl</div>
+                        <div class="pipeline-label">URL del repo<br>GitHub</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box green">¿En MongoDB?</div>
+                        <div class="pipeline-label">Buscar caché<br>por repoUrl</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box blue">Gemini</div>
+                        <div class="pipeline-label">Solo si no<br>hay caché</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box green">MongoDB</div>
+                        <div class="pipeline-label">Guarda para<br>próximas veces</div>
+                    </div>
+                </div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    Gemini analiza el repositorio y devuelve un JSON con toda la información técnica relevante:
+                </p>
+
+                <div class="code-block">{
+                    "language": "Java",
+                    "framework": "Spring Boot",
+                    "buildSystem": "Maven",
+                    "technologies": ["Redis", "PostgreSQL", "Thymeleaf", "Docker"],
+                    "databases": ["PostgreSQL", "Redis"],
+                    "ports": [8080, 8081, 8082, 8083],
+                    "environment": ["DATABASE_URL", "REDIS_HOST", "GEMINI_API_KEY"],
+                    "summary": "Sistema multi-pantalla de presentaciones con microservicios",
+                    "structure": "4 microservicios: gateway, state, ui, ai",
+                    "deploymentHints": "Usar Render con Web Services separados, Redis addon"
+                    }</div>
+
+                <div class="tip-callout">
+                    <strong>Caché inteligente:</strong> Si el mismo repositorio se analiza varias veces
+                    (distintos usuarios, distintas presentaciones), Gemini solo se llama una vez.
+                    Después, todos leen de MongoDB. Para forzar un nuevo análisis existe el endpoint
+                    <code class="font-mono">/api/ai/analyze-repo/refresh</code> que borra el caché y recalcula.
+                </div>
+            </section>
+
+            <!-- ══════════════════════════════════════
+             6. DEPLOY TUTOR
+        ══════════════════════════════════════ -->
+            <section id="deploy" class="guide-section sh-card p-6 space-y-4">
+                <div class="sh-label"><i class="fa-solid fa-rocket mr-1"></i>DEPLOY TUTOR</div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    Dado un repositorio y una plataforma (Render, Vercel, Netlify), genera automáticamente
+                    un Dockerfile y una guía paso a paso para desplegarlo. Todo se cachea por
+                    <code class="font-mono">repoUrl + platform</code>.
+                </p>
+
+                <!-- Pipeline deploy -->
+                <div class="pipeline-wrap">
+                    <div class="pipeline-step">
+                        <div class="pipeline-box">repoUrl<br>+ platform</div>
+                        <div class="pipeline-label">Ej: render</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box green">Análisis<br>del repo</div>
+                        <div class="pipeline-label">Lee o genera<br>RepoAnalysis</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box amber">Groq<br>Dockerfile</div>
+                        <div class="pipeline-label">Multi-stage,<br>non-root, HEALTHCHECK</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box amber">Groq<br>Guía</div>
+                        <div class="pipeline-label">Pasos, tips,<br>ejemplo .env</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box green">MongoDB</div>
+                        <div class="pipeline-label">Caché por<br>repo+platform</div>
+                    </div>
+                </div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    El resultado final es un <code class="font-mono">DeploymentGuide</code> que incluye:
+                </p>
+
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="p-3 rounded-tech bg-[var(--sh-deep)] border border-[var(--sh-border)]">
+                        <div class="text-xs font-mono text-[var(--sh-amber)] mb-2">dockerfile</div>
+                        <p class="text-xs text-[var(--sh-text-2)] leading-relaxed">
+                            Generado con buenas prácticas: multi-stage build para reducir tamaño,
+                            usuario no-root por seguridad, HEALTHCHECK, variables de entorno como ARG/ENV.
+                        </p>
+                    </div>
+                    <div class="p-3 rounded-tech bg-[var(--sh-deep)] border border-[var(--sh-border)]">
+                        <div class="text-xs font-mono text-[var(--sh-amber)] mb-2">guide + tips</div>
+                        <p class="text-xs text-[var(--sh-text-2)] leading-relaxed">
+                            Guía numerada para la plataforma elegida (Render, Vercel, Netlify)
+                            + lista de tips específicos + ejemplo de archivo <code class="font-mono">.env</code>
+                            con las variables detectadas.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════════════════════════════
+             7. ASISTENTE DE AUDIO
+        ══════════════════════════════════════ -->
+            <section id="audio" class="guide-section sh-card p-6 space-y-4">
+                <div class="sh-label"><i class="fa-solid fa-microphone mr-1"></i>ASISTENTE DE AUDIO</div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    Permite que los participantes de una reunión hagan preguntas por voz durante la presentación.
+                    El sistema transcribe el audio, lo entiende en contexto y genera una respuesta.
+                </p>
+
+                <!-- Pipeline audio -->
+                <div class="pipeline-wrap">
+                    <div class="pipeline-step">
+                        <div class="pipeline-box">Audio<br>(multipart)</div>
+                        <div class="pipeline-label">WAV, MP3, etc.<br>del participante</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box amber">Groq Whisper<br>large-v3</div>
+                        <div class="pipeline-label">Transcribe audio<br>a texto en español</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box blue">Gemini</div>
+                        <div class="pipeline-label">Extrae contexto<br>del repo (opcional)</div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-box amber">Groq LLM</div>
+                        <div class="pipeline-label">Genera respuesta<br>en 4 frases máx.</div>
+                    </div>
+                </div>
+
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div>
+                        <p class="text-xs font-mono text-[var(--sh-text-3)] mb-1">El request llega como multipart:</p>
+                        <div class="code-block" style="font-size:0.65rem">POST /api/ai/assist/audio
+
+                            audio → archivo de audio
+                            repoUrl → URL del repo (opcional)
+                            slideNumber → número del slide actual
+                            slideContext → descripción del slide</div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-mono text-[var(--sh-text-3)] mb-1">La respuesta incluye:</p>
+                        <div class="code-block" style="font-size:0.65rem">{
+                            "success": true,
+                            "transcription":
+                            "¿Cómo funciona el gateway?",
+                            "answer":
+                            "El gateway centraliza el enrutamiento..."
+                            }</div>
+                    </div>
+                </div>
+
+                <div class="note-callout">
+                    <strong>El contexto hace la diferencia:</strong> Groq no solo responde la pregunta transcrita,
+                    sino que tiene en cuenta qué slide se está mostrando y el contenido técnico del repositorio.
+                    Esto permite respuestas mucho más precisas que un chatbot genérico.
+                </div>
+            </section>
+
+            <!-- ══════════════════════════════════════
+             8. BASE DE DATOS
+        ══════════════════════════════════════ -->
+            <section id="mongodb" class="guide-section sh-card p-6 space-y-4">
+                <div class="sh-label"><i class="fa-solid fa-database mr-1"></i>BASE DE DATOS — MONGODB</div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    El <code class="font-mono text-[var(--sh-blue)]">ai-service</code> usa MongoDB exclusivamente.
+                    Se eligió MongoDB (en lugar de PostgreSQL) porque los datos generados por IA son documentos
+                    semi-estructurados: listas de longitud variable, campos opcionales, texto largo.
+                    Encajan mejor en un modelo de documentos que en tablas relacionales.
+                </p>
+
+                <!-- Colección 1: presenter_notes -->
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="sh-badge text-xs">Colección</span>
+                        <code class="font-mono text-sm text-[var(--sh-blue)]">presenter_notes</code>
+                    </div>
+                    <p class="text-xs text-[var(--sh-text-3)] mb-2">Índice único compuesto en <code
+                            class="font-mono">(presentationId, slideNumber)</code></p>
+                    <div class="space-y-0 border border-[var(--sh-border)] rounded-tech overflow-hidden">
+                        <div class="field-row px-3"><span class="field-name">presentationId</span><span
+                                class="field-type">String</span><span class="field-desc">ID de la presentación en
+                                PostgreSQL</span></div>
+                        <div class="field-row px-3"><span class="field-name">slideNumber</span><span
+                                class="field-type">int</span><span class="field-desc">Número del slide (empieza en
+                                1)</span></div>
+                        <div class="field-row px-3"><span class="field-name">title</span><span
+                                class="field-type">String</span><span class="field-desc">Título corto del slide generado
+                                por IA</span></div>
+                        <div class="field-row px-3"><span class="field-name">points</span><span
+                                class="field-type">List&lt;String&gt;</span><span class="field-desc">Puntos clave para
+                                explicar (3–5 ítems)</span></div>
+                        <div class="field-row px-3"><span class="field-name">suggestedTime</span><span
+                                class="field-type">String</span><span class="field-desc">Tiempo estimado, ej: "~2
+                                min"</span></div>
+                        <div class="field-row px-3"><span class="field-name">keyPhrases</span><span
+                                class="field-type">List&lt;String&gt;</span><span class="field-desc">Frases técnicas
+                                clave del slide</span></div>
+                        <div class="field-row px-3"><span class="field-name">demoTags</span><span
+                                class="field-type">List&lt;String&gt;</span><span class="field-desc">Tags de demos a
+                                mostrar en este slide</span></div>
+                    </div>
+                </div>
+
+                <!-- Colección 2: repo_analysis -->
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="sh-badge text-xs">Colección</span>
+                        <code class="font-mono text-sm text-[var(--sh-blue)]">repo_analysis</code>
+                    </div>
+                    <p class="text-xs text-[var(--sh-text-3)] mb-2">Índice único en <code
+                            class="font-mono">repoUrl</code> — sirve como caché del análisis de Gemini</p>
+                    <div class="space-y-0 border border-[var(--sh-border)] rounded-tech overflow-hidden">
+                        <div class="field-row px-3"><span class="field-name">repoUrl</span><span
+                                class="field-type">String</span><span class="field-desc">URL del repositorio
+                                analizado</span></div>
+                        <div class="field-row px-3"><span class="field-name">analyzedAt</span><span
+                                class="field-type">LocalDateTime</span><span class="field-desc">Cuándo se generó el
+                                análisis</span></div>
+                        <div class="field-row px-3"><span class="field-name">language</span><span
+                                class="field-type">String</span><span class="field-desc">Lenguaje principal: "Java",
+                                "Python", etc.</span></div>
+                        <div class="field-row px-3"><span class="field-name">framework</span><span
+                                class="field-type">String</span><span class="field-desc">Framework principal
+                                detectado</span></div>
+                        <div class="field-row px-3"><span class="field-name">technologies</span><span
+                                class="field-type">List&lt;String&gt;</span><span class="field-desc">Stack completo
+                                detectado por Gemini</span></div>
+                        <div class="field-row px-3"><span class="field-name">ports, environment, databases</span><span
+                                class="field-type">List</span><span class="field-desc">Puertos, variables de entorno y
+                                bases de datos</span></div>
+                        <div class="field-row px-3"><span class="field-name">dockerfile</span><span
+                                class="field-type">String</span><span class="field-desc">Dockerfile generado por Groq
+                                (se llena después)</span></div>
+                    </div>
+                </div>
+
+                <!-- Colección 3: deployment_guides -->
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="sh-badge text-xs">Colección</span>
+                        <code class="font-mono text-sm text-[var(--sh-blue)]">deployment_guides</code>
+                    </div>
+                    <p class="text-xs text-[var(--sh-text-3)] mb-2">Índice único compuesto en <code
+                            class="font-mono">(repoUrl, platform)</code></p>
+                    <div class="space-y-0 border border-[var(--sh-border)] rounded-tech overflow-hidden">
+                        <div class="field-row px-3"><span class="field-name">repoUrl</span><span
+                                class="field-type">String</span><span class="field-desc">URL del repositorio</span>
+                        </div>
+                        <div class="field-row px-3"><span class="field-name">platform</span><span
+                                class="field-type">String</span><span class="field-desc">"render", "vercel" o
+                                "netlify"</span></div>
+                        <div class="field-row px-3"><span class="field-name">dockerfile</span><span
+                                class="field-type">String</span><span class="field-desc">Dockerfile optimizado para el
+                                repo</span></div>
+                        <div class="field-row px-3"><span class="field-name">guide</span><span
+                                class="field-type">String</span><span class="field-desc">Guía paso a paso en texto
+                                plano</span></div>
+                        <div class="field-row px-3"><span class="field-name">tips</span><span
+                                class="field-type">List&lt;String&gt;</span><span class="field-desc">Consejos
+                                adicionales de despliegue</span></div>
+                        <div class="field-row px-3"><span class="field-name">environmentExample</span><span
+                                class="field-type">String</span><span class="field-desc">Ejemplo de archivo .env con las
+                                variables</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════════════════════════════
+             9. ENDPOINTS
+        ══════════════════════════════════════ -->
+            <section id="endpoints" class="guide-section sh-card p-6 space-y-5">
+                <div class="sh-label"><i class="fa-solid fa-plug mr-1"></i>REFERENCIA DE ENDPOINTS</div>
+
+                <p class="text-sm text-[var(--sh-text-2)] leading-relaxed">
+                    Todos los endpoints son accesibles a través del
+                    <code class="font-mono text-[var(--sh-amber)]">gateway-service</code> en el puerto 8080.
+                    Los que generan IA tienen rate limiting activo.
+                </p>
+
+                <!-- Notas -->
+                <div>
+                    <div class="text-xs font-mono text-[var(--sh-text-3)] mb-2 uppercase tracking-wider">Notas del
+                        presentador</div>
+                    <div class="border border-[var(--sh-border)] rounded-tech overflow-hidden">
+                        <div class="ep-row px-3 bg-[var(--sh-deep)]">
+                            <span class="method-post">POST</span>
+                            <span class="ep-path">/api/ai/notes/generate</span>
+                            <span class="ep-desc">Genera nota para un slide individual (Gemini Vision + Groq)</span>
+                        </div>
+                        <div class="ep-row px-3">
+                            <span class="method-post">POST</span>
+                            <span class="ep-path">/api/ai/notes/generate-all</span>
+                            <span class="ep-desc">Genera notas para todos los slides de una presentación</span>
+                        </div>
+                        <div class="ep-row px-3 bg-[var(--sh-deep)]">
+                            <span class="method-get">GET</span>
+                            <span class="ep-path">/api/ai/notes/{presentationId}</span>
+                            <span class="ep-desc">Lista todas las notas de una presentación</span>
+                        </div>
+                        <div class="ep-row px-3">
+                            <span class="method-get">GET</span>
+                            <span class="ep-path">/api/ai/notes/{presentationId}/{slideNumber}</span>
+                            <span class="ep-desc">Nota de un slide concreto (204 si no existe)</span>
+                        </div>
+                        <div class="ep-row px-3 bg-[var(--sh-deep)]">
+                            <span class="method-delete" style="color:#f85149;">DELETE</span>
+                            <span class="ep-path">/api/ai/notes/{presentationId}</span>
+                            <span class="ep-desc">Elimina todas las notas de una presentación</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Análisis de repo -->
+                <div>
+                    <div class="text-xs font-mono text-[var(--sh-text-3)] mb-2 uppercase tracking-wider">Análisis de
+                        repositorio</div>
+                    <div class="border border-[var(--sh-border)] rounded-tech overflow-hidden">
+                        <div class="ep-row px-3 bg-[var(--sh-deep)]">
+                            <span class="method-post">POST</span>
+                            <span class="ep-path">/api/ai/analyze-repo</span>
+                            <span class="ep-desc">Analiza el repo (usa caché MongoDB si ya existe)</span>
+                        </div>
+                        <div class="ep-row px-3">
+                            <span class="method-post">POST</span>
+                            <span class="ep-path">/api/ai/analyze-repo/refresh</span>
+                            <span class="ep-desc">Fuerza nuevo análisis ignorando el caché</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deploy tutor -->
+                <div>
+                    <div class="text-xs font-mono text-[var(--sh-text-3)] mb-2 uppercase tracking-wider">Deploy Tutor
+                    </div>
+                    <div class="border border-[var(--sh-border)] rounded-tech overflow-hidden">
+                        <div class="ep-row px-3 bg-[var(--sh-deep)]">
+                            <span class="method-post">POST</span>
+                            <span class="ep-path">/api/ai/deploy/analyze</span>
+                            <span class="ep-desc">Analiza repo para despliegue (misma lógica que analyze-repo)</span>
+                        </div>
+                        <div class="ep-row px-3">
+                            <span class="method-post">POST</span>
+                            <span class="ep-path">/api/ai/deploy/dockerfile</span>
+                            <span class="ep-desc">Genera Dockerfile optimizado con Groq</span>
+                        </div>
+                        <div class="ep-row px-3 bg-[var(--sh-deep)]">
+                            <span class="method-post">POST</span>
+                            <span class="ep-path">/api/ai/deploy/guide</span>
+                            <span class="ep-desc">Genera guía de despliegue para Render/Vercel/Netlify</span>
+                        </div>
+                        <div class="ep-row px-3">
+                            <span class="method-post">POST</span>
+                            <span class="ep-path">/api/ai/deploy/guide/refresh</span>
+                            <span class="ep-desc">Regenera la guía borrando el caché</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audio -->
+                <div>
+                    <div class="text-xs font-mono text-[var(--sh-text-3)] mb-2 uppercase tracking-wider">Asistente de
+                        audio</div>
+                    <div class="border border-[var(--sh-border)] rounded-tech overflow-hidden">
+                        <div class="ep-row px-3 bg-[var(--sh-deep)]">
+                            <span class="method-post">POST</span>
+                            <span class="ep-path">/api/ai/assist/audio</span>
+                            <span class="ep-desc">Transcribe audio y genera respuesta contextual (multipart)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warn-callout">
+                    <strong>Rate limiting activo en el gateway:</strong>
+                    Los endpoints de IA tienen límites de 5–6 solicitudes por minuto por IP para controlar el costo de
+                    las APIs.
+                    Si una solicitud supera el límite, el gateway devuelve <code
+                        class="font-mono">429 Too Many Requests</code>
+                    con el header <code class="font-mono">Retry-After</code> indicando cuántos segundos esperar.
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <div class="text-center py-4">
+                <span class="font-mono text-xs text-[var(--sh-text-3)]">ai-service — SlideHub v1 · Spring Boot 4 · Java
+                    21</span>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SlideHub — Registro</title>
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+</head>
+
+<body class="sh bg-sh-deep antialiased min-h-screen flex items-center justify-center px-4 py-8">
+
+    <div class="w-full max-w-[380px] sh-fade-in">
+
+        <!-- ── Logo + Label ── -->
+        <div class="text-center mb-8">
+            <img th:src="@{/images/logo.svg}" alt="SlideHub" class="h-12 w-12 mx-auto mb-3">
+            <h1 class="font-brand text-2xl text-[var(--sh-text-1)]">SlideHub</h1>
+            <div class="sh-label mt-1">CREATE_ACCOUNT</div>
+        </div>
+
+        <!-- ── Register Card ── -->
+        <div class="sh-card p-6">
+
+            <!-- Alerts -->
+            <div th:if="${errorMessage}" class="sh-alert sh-alert-error mb-4">
+                <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                <span th:text="${errorMessage}">Error</span>
+            </div>
+            <div th:if="${successMessage}" class="sh-alert sh-alert-success mb-4">
+                <i class="fa-solid fa-circle-check mt-0.5"></i>
+                <span th:text="${successMessage}">Success</span>
+            </div>
+
+            <!-- Register Form -->
+            <form method="post" th:action="@{/auth/register}" th:unless="${successMessage}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}">
+
+                <div class="mb-4">
+                    <label for="username" class="sh-input-label">Username</label>
+                    <input type="text" class="sh-input" id="username" name="username"
+                           autocomplete="username" placeholder="system_user"
+                           minlength="3" maxlength="50" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="email" class="sh-input-label">Email</label>
+                    <input type="email" class="sh-input" id="email" name="email"
+                           autocomplete="email" placeholder="user@node.io" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="sh-input-label">Password</label>
+                    <input type="password" class="sh-input" id="password" name="password"
+                           autocomplete="new-password" placeholder="Min 8 characters"
+                           minlength="8" required>
+                </div>
+
+                <div class="mb-5">
+                    <label for="confirmPassword" class="sh-input-label">Confirm_Password</label>
+                    <input type="password" class="sh-input" id="confirmPassword" name="confirmPassword"
+                           autocomplete="new-password" placeholder="Repeat password"
+                           minlength="8" required>
+                </div>
+
+                <button type="submit" class="sh-btn sh-btn-blue w-full justify-center">
+                    <i class="fa-solid fa-user-plus"></i>
+                    Create_Account
+                </button>
+            </form>
+
+            <!-- OAuth Separator -->
+            <div th:unless="${successMessage}" class="flex items-center gap-3 my-5">
+                <div class="flex-1 h-px bg-[var(--sh-border)]"></div>
+                <span class="sh-label">OR_CONTINUE_WITH</span>
+                <div class="flex-1 h-px bg-[var(--sh-border)]"></div>
+            </div>
+
+            <!-- OAuth Buttons -->
+            <div th:unless="${successMessage}" class="flex gap-3">
+                <a href="/oauth2/authorization/github" class="sh-btn flex-1 justify-center">
+                    <i class="fa-brands fa-github"></i>
+                    GitHub
+                </a>
+                <a href="/oauth2/authorization/google" class="sh-btn flex-1 justify-center">
+                    <i class="fa-brands fa-google"></i>
+                    Google
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer link -->
+        <div class="text-center mt-5">
+            <span class="text-[var(--sh-text-3)] text-sm">Already registered?</span>
+            <a th:href="@{/auth/login}" class="text-[var(--sh-blue)] text-sm ml-1 hover:underline">
+                Sign_In
+            </a>
+        </div>
+    </div>
+
+</body>
+
+</html>
