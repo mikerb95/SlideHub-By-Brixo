@@ -1,11 +1,27 @@
-name: Smoke E2E
+name: Smoke E2E Monolith
 
 on:
+  push:
+    branches:
+      - development
+    paths:
+      - 'slidehub-service/**'
+      - 'scripts/smoke-e2e.sh'
+      - '.github/workflows/smoke-e2e.yml'
+      - 'docs/SMOKE-E2E.md'
+  pull_request:
+    branches:
+      - development
+    paths:
+      - 'slidehub-service/**'
+      - 'scripts/smoke-e2e.sh'
+      - '.github/workflows/smoke-e2e.yml'
+      - 'docs/SMOKE-E2E.md'
   workflow_dispatch:
 
 jobs:
-  smoke-e2e:
-    name: Run smoke e2e script
+  smoke-e2e-monolith:
+    name: Run monolith smoke script
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -24,8 +40,6 @@ jobs:
         run: chmod +x ./mvnw
 
       - name: Run smoke script
-        env:
-          SMOKE_FORCE_DDL_UPDATE: "true"
         run: |
           chmod +x ./scripts/smoke-e2e.sh
           ./scripts/smoke-e2e.sh

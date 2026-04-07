@@ -1,4 +1,4 @@
-okpackage com.brixo.slidehub.gateway.config;
+package com.brixo.slidehub.gateway.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -6,8 +6,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.servlet.function.RequestPredicates;
 import org.springframework.web.servlet.function.RouterFunction;
+import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
 
+import java.util.function.Function;
+
+import static org.springframework.cloud.gateway.server.mvc.filter.BeforeFilterFunctions.setRequestHeader;
 import static org.springframework.cloud.gateway.server.mvc.filter.FilterFunctions.uri;
 import static org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions.route;
 import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions.http;
@@ -36,6 +40,26 @@ public class RoutesConfig {
         @Value("${slidehub.ui-service.url:http://localhost:8082}")
         private String uiServiceUrl;
 
+        @Value("${slidehub.base-url:}")
+        private String baseUrl;
+
+        /**
+         * Construye un before-filter que inyecta X-Forwarded-Host/Proto/Port
+         * para que el servicio downstream resuelva el dominio público (slide.lat)
+         * en vez del hostname interno de Render.
+         * Si baseUrl está vacío (desarrollo local), no inyecta nada.
+         */
+        private Function<ServerRequest, ServerRequest> forwardedHeaders() {
+                if (baseUrl == null || baseUrl.isBlank()) {
+                        return Function.identity();
+                }
+                String proto = baseUrl.contains("://") ? baseUrl.substring(0, baseUrl.indexOf("://")) : "https";
+                String host = baseUrl.contains("://") ? baseUrl.substring(baseUrl.indexOf("://") + 3) : baseUrl;
+                return setRequestHeader("X-Forwarded-Host", host)
+                        .andThen(setRequestHeader("X-Forwarded-Proto", proto))
+                        .andThen(setRequestHeader("X-Forwarded-Port", "https".equals(proto) ? "443" : "80"));
+        }
+
         /** IA routes — DEBE evaluarse antes que /api/** (Order=1) */
         @Bean
         @Order(1)
@@ -55,6 +79,7 @@ public class RoutesConfig {
         public RouterFunction<ServerResponse> presentationApiRoutes() {
                 return route("presentation-api-routes")
                                 .route(RequestPredicates.path("/api/presentations/**"), http())
+                                .before(forwardedHeaders())
                                 .filter(uri(uiServiceUrl))
                                 .build();
         }
@@ -86,11 +111,15 @@ public class RoutesConfig {
                                                                 .or(RequestPredicates.path("/demo"))
                                                                 .or(RequestPredicates.path("/showcase"))
                                                                 .or(RequestPredicates.path("/deploy-tutor"))
+                                                                .or(RequestPredicates.path("/status"))
+                                                                .or(RequestPredicates.path("/status/api/checks"))
+                                                                .or(RequestPredicates.path("/calidad"))
                                                                 .or(RequestPredicates.path("/presentations/**"))
                                                                 .or(RequestPredicates.path("/css/**"))
                                                                 .or(RequestPredicates.path("/js/**"))
                                                                 .or(RequestPredicates.path("/favicon.ico")), // Fase 2
                                                 http())
+                                .before(forwardedHeaders())
                                 .filter(uri(uiServiceUrl))
                                 .build();
         }
@@ -101,6 +130,7 @@ public class RoutesConfig {
         public RouterFunction<ServerResponse> presentationRoutes() {
                 return route("presentation-routes")
                                 .route(RequestPredicates.path("/presentation/**"), http())
+                                .before(forwardedHeaders())
                                 .filter(uri(uiServiceUrl))
                                 .build();
         }

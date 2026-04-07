@@ -3,6 +3,14 @@
 > **Instrucciones específicas para Claude** al trabajar en este repositorio.
 > Complementa `AGENTS.md` — ambos deben leerse juntos.
 
+## Propiedad y licencia
+
+Este repositorio es **código cerrado** y se publica en GitHub solo para visibilidad y referencia.
+
+- Licencia: **All Rights Reserved**
+- No se permite usar, copiar, modificar, redistribuir, sublicenciar ni comercializar el código sin autorización escrita previa.
+- La publicación pública del repositorio no concede permisos de uso más allá de los expresamente otorgados por el titular.
+
 ---
 
 ## 1. Contexto del Proyecto
@@ -15,7 +23,7 @@ Es la reescritura de un módulo PHP/CodeIgniter 4 documentado en
 - Spring Boot 4.0.3 / Spring Cloud 2025.1.0 / Java 21
 - Maven multi-módulo (4 servicios creados en Fase 0)
 - Redis (estado en memoria y eventos hápticos), MongoDB (notas IA + deploy guides), PostgreSQL/JPA (usuarios, presentaciones, sesiones de reunión y asignaciones), Thymeleaf (UI), Spring Security (auth local + OAuth2), Spring Cloud Gateway (enrutamiento)
-- 4 microservicios: `state-service` (8081), `ui-service` (8082), `ai-service` (8083), `gateway-service` (8080)
+- Monolito modular: `slidehub-service` (Puerto 8080)
 - **OAuth2:** GitHub + Google coexisten con login local; tokens en PostgreSQL
 - **Google Drive:** Google Drive REST API v3 vía `WebClient` (sin SDK)
 - **Gemini Vision:** analiza visualmente slides PNG para notas del presentador
@@ -36,7 +44,7 @@ Es la reescritura de un módulo PHP/CodeIgniter 4 documentado en
 
 Antes de producir cualquier código, recorre este checklist internamente:
 
-1. ¿Esta tarea pertenece a `state-service`, `ui-service`, `ai-service` o `gateway-service`?
+1. ¿Esta tarea pertenece al módulo `state`, `ui` o `ai` dentro de `slidehub-service`?
 2. ¿Qué historia de usuario cubre esto? Verificar `AGENTS.md §6` y los criterios de aceptación en el CSV.
 3. ¿El comportamiento detallado está en `docs/Presentation-Module-Analysis.md`? Si sí, cítalo; si no existe, usar el CSV y la implementación actual como base.
 4. ¿Qué paquete Java corresponde según la convención de `AGENTS.md §4`?
@@ -120,7 +128,7 @@ public ResponseEntity<SlideState> getSlide() {
 public SlideState getSlide() { ... }
 ```
 
-### 4.4 WebClient en ui-service
+### 4.4 Inyección Directa en el Monolito
 
 ```java
 // Definir el bean una sola vez en @Configuration
@@ -129,14 +137,11 @@ public WebClient stateServiceClient(@Value("${slidehub.state-service.url}") Stri
     return WebClient.builder().baseUrl(url).build();
 }
 
-// Usar en el servicio
+// Usar en el servicio directament vía inyección
+private final SlideStateService stateService;
+
 public SlideState fetchCurrentSlide() {
-    return stateServiceClient
-        .get()
-        .uri("/api/slide")
-        .retrieve()
-        .bodyToMono(SlideState.class)
-        .block(); // síncrono intencionalmente — MVC thread model
+    return stateService.getCurrentSlide();
 }
 ```
 
@@ -206,7 +211,7 @@ El `pom.xml` raíz debe tener `<packaging>pom</packaging>` y listar los módulos
     <module>state-service</module>
     <module>ui-service</module>
     <module>ai-service</module>
-    <module>gateway-service</module>
+    <module>(ya no aplica, monolito)</module>
 </modules>
 ```
 
@@ -220,7 +225,7 @@ No copiar todas las dependencias del parent a cada hijo.
 | `state-service`   | `web`, `data-redis`, `actuator`                                                                 |
 | `ui-service`      | `web`, `thymeleaf`, `thymeleaf-extras-springsecurity6`, `security`, `oauth2-client`, `webflux`, `data-jpa`, `postgresql`, `flyway-core`, `actuator`, `software.amazon.awssdk:s3` |
 | `ai-service`      | `web`, `data-mongodb`, `webflux` (solo WebClient), `actuator`                                   |
-| `gateway-service` | `spring-cloud-gateway-server-webmvc`, `config-server`, `actuator`                               |
+| `(ya no aplica, monolito)` | `spring-cloud-gateway-server-webmvc`, `config-server`, `actuator`                               |
 
 > **AWS SDK v2** (`software.amazon.awssdk:s3`) es una excepción justificada al patrón WebClient-only:
 > S3 requiere firma SigV4 que el SDK maneja automáticamente. Solo en `ui-service`.
@@ -288,8 +293,8 @@ slidehub.ai.groq.model=${GROQ_MODEL:llama3-8b-8192}
 slidehub.resend.api-key=${RESEND_API_KEY}
 slidehub.resend.from=noreply@slidehub.app
 
-# gateway-service
-spring.application.name=gateway-service
+# (ya no aplica, monolito)
+spring.application.name=(ya no aplica, monolito)
 server.port=8080
 spring.cloud.config.server.native.search-locations=classpath:/config-repo
 ```
@@ -300,7 +305,7 @@ spring.cloud.config.server.native.search-locations=classpath:/config-repo
 
 ### "Implementa el endpoint `GET /api/slide`"
 
-1. Ubicar en `state-service/src/main/java/com/brixo/slidehub/state/`
+1. Ubicar en `slidehub-service/src/main/java/com/brixo/slidehub/state/`
 2. Crear: `model/SlideStateResponse.java` (record con `slide` y `totalSlides`), `service/SlideStateService.java`, `controller/SlideController.java`
 3. `SlideStateService` lee `current_slide` de Redis; cuenta archivos del directorio slides para `totalSlides`.
 4. Comportamiento por defecto: si la clave no existe → `{ "slide": 1, "totalSlides": N }` (HU-008 §2)
@@ -324,7 +329,7 @@ spring.cloud.config.server.native.search-locations=classpath:/config-repo
 
 ### "Implementa generación de notas IA (`POST /api/ai/notes/generate`)"
 
-1. Ubicar en `ai-service/src/main/java/com/brixo/slidehub/ai/`
+1. Ubicar en `slidehub-service/src/main/java/com/brixo/slidehub/ai/`
 2. `NotesController` recibe `GenerateNoteRequest(presentationId, slideNumber, repoUrl, slideContext)`
 3. `GeminiService.extractRepoContext(repoUrl, slideContext)` → llama a Gemini API vía `WebClient`
 4. `GroqService.generateNote(geminiContext)` → llama a Groq API vía `WebClient`
@@ -334,7 +339,7 @@ spring.cloud.config.server.native.search-locations=classpath:/config-repo
 
 ### "Configura el API Gateway"
 
-1. Ubicar en `gateway-service`
+1. Ubicar en `(ya no aplica, monolito)`
 2. Definir rutas en `RoutesConfig.java` con `@Bean RouteLocator`
 3. **Orden obligatorio:** `/api/ai/**` → `ai-service:8083` ANTES de `/api/**` → `state-service:8081`
 4. Rutas de UI → `ui-service:8082`
@@ -619,7 +624,7 @@ Cada microservicio es un **Web Service** en Render:
 
 | Servicio          | Build Command                           | Start Command                            |
 |-------------------|-----------------------------------------|------------------------------------------|
-| `gateway-service` | `./mvnw -pl gateway-service package -am` | `java -jar gateway-service/target/*.jar` |
+| `(ya no aplica, monolito)` | `./mvnw -pl (ya no aplica, monolito) package -am` | `java -jar (ya no aplica, monolito)/target/*.jar` |
 | `state-service`   | `./mvnw -pl state-service package -am`  | `java -jar state-service/target/*.jar`   |
 | `ui-service`      | `./mvnw -pl ui-service package -am`     | `java -jar ui-service/target/*.jar`      |
 | `ai-service`      | `./mvnw -pl ai-service package -am`     | `java -jar ai-service/target/*.jar`      |
@@ -876,7 +881,7 @@ Usar estos términos de forma consistente en código, variables y comentarios:
 - No hardcodees credenciales AWS ni el DSN de Aiven — siempre desde variables de entorno.
 - No guardes arhivos subidos por usuarios en el filesystem local de Render — todo va a S3.
 - No uses `ddl-auto=create` ni `ddl-auto=update` en producción con Aiven — solo `validate` + migraciones Flyway.
-- No configures CORS ni headers de trust por servicio individual — centralizar en `gateway-service`.
+- No configures CORS ni headers de trust por servicio individual — centralizar en `(ya no aplica, monolito)`.
 - No almacenes tokens OAuth2 (GitHub/Google) en texto plano en PostgreSQL — encriptar.
 
 ---
