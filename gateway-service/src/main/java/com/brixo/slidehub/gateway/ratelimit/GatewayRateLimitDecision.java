@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 package com.brixo.slidehub.gateway.ratelimit;
 
 public record GatewayRateLimitDecision(boolean permitted, String ruleName, long retryAfterSeconds) {
@@ -11,6 +10,3 @@ public record GatewayRateLimitDecision(boolean permitted, String ruleName, long 
         return new GatewayRateLimitDecision(false, ruleName, retryAfterSeconds);
     }
 }
-=======
-PersonaD-GatewayService-Investigacion.mdPersonaD-GatewayService-Investigacion.md
->>>>>>> 877e58b9bcec0240251be500577ed8b9c26e83f1
