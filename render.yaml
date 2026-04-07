@@ -1,117 +1,76 @@
 # Render Infrastructure as Code (IaC) Blueprint
-# Despliega automáticamente los 4 microservicios de SlideHub
-# 
-# Documentación: https://render.com/docs/infrastructure-as-code
-# Para utilizar:
-#   1. Sube este archivo a tu repositorio como render.yaml
-#   2. Ve a Render Dashboard → Templates → Create from Blueprint
-#   3. Pega la URL de tu repo en GitHub
-#   4. Render detectará este archivo automáticamente
+# Despliegue monolítico de SlideHub
+#
+# Uso:
+#   1. Sube este archivo al repo como render.yaml
+#   2. Render Dashboard → Blueprints → New from Blueprint
+#   3. Pega la URL del repo y despliega
 
 services:
-  # ────────────────────────────────────────────────────────────────
-  # Gateway Service (puerto 8080) — Punto de entrada único
-  # ────────────────────────────────────────────────────────────────
   - type: web
-    name: slidehub-gateway
+    name: slidehub-service
     plan: free
     runtime: docker
     region: oregon
-    dockerfilePath: gateway-service/Dockerfile
+    dockerContext: .
+    dockerfilePath: slidehub-service/Dockerfile
     autoDeploy: true
     healthCheckPath: /actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: STATE_SERVICE_URL
-        value: https://slidehub-state.onrender.com
-      - key: UI_SERVICE_URL
-        value: https://slidehub-ui.onrender.com
-      - key: AI_SERVICE_URL
-        value: https://slidehub-ai.onrender.com
-
-  # ────────────────────────────────────────────────────────────────
-  # State Service (puerto 8081) — Gestión de estado en Redis
-  # ────────────────────────────────────────────────────────────────
-  - type: web
-    name: slidehub-state
-    plan: free
-    runtime: docker
-    region: oregon
-    dockerfilePath: state-service/Dockerfile
-    autoDeploy: true
-    healthCheckPath: /actuator/health
-    envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: prod
-      - key: REDIS_URL
-        sync: false  # URL completa de Redis Cloud: rediss://default:<password>@<host>:<port>
-
-  # ────────────────────────────────────────────────────────────────
-  # UI Service (puerto 8082) — Vistas Thymeleaf + Auth + OAuth2
-  # ────────────────────────────────────────────────────────────────
-  - type: web
-    name: slidehub-ui
-    plan: free
-    runtime: docker
-    region: oregon
-    dockerfilePath: ui-service/Dockerfile
-    autoDeploy: true
-    healthCheckPath: /actuator/health
-    envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: prod
-      - key: STATE_SERVICE_URL
-        value: https://slidehub-state.onrender.com
-      - key: AI_SERVICE_URL
-        value: https://slidehub-ai.onrender.com
       - key: BASE_URL
         value: https://slide.lat
+
+      # PostgreSQL (Aiven)
       - key: DATABASE_URL
-        sync: false  # Configurar en Dashboard con DSN de Aiven
+        sync: false
       - key: DB_DRIVER
         value: org.postgresql.Driver
       - key: JPA_DIALECT
         value: org.hibernate.dialect.PostgreSQLDialect
+
+      # Redis
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: "6379"
+
+      # MongoDB
+      - key: MONGODB_URI
+        sync: false
+
+      # OAuth2 GitHub
       - key: GITHUB_CLIENT_ID
-        sync: false  # OAuth2 GitHub — configurable en Dashboard
+        sync: false
       - key: GITHUB_CLIENT_SECRET
         sync: false
+
+      # OAuth2 Google
       - key: GOOGLE_CLIENT_ID
-        sync: false  # OAuth2 Google — configurable en Dashboard
+        sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+
+      # IA
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama3-8b-8192
+
+      # Email
       - key: RESEND_API_KEY
-        sync: false  # Resend email API — configurable en Dashboard
+        sync: false
+
+      # S3
       - key: AWS_S3_BUCKET
         value: slidehub-assets
       - key: AWS_REGION
-        value: us-east-2
+        value: us-east-1
       - key: AWS_ACCESS_KEY_ID
-        sync: false  # AWS S3 — configurable en Dashboard
+        sync: false
       - key: AWS_SECRET_ACCESS_KEY
         sync: false
-
-  # ────────────────────────────────────────────────────────────────
-  # AI Service (puerto 8083) — IA: Gemini + Groq + MongoDB
-  # ────────────────────────────────────────────────────────────────
-  - type: web
-    name: slidehub-ai
-    plan: free
-    runtime: docker
-    region: oregon
-    dockerfilePath: ai-service/Dockerfile
-    autoDeploy: true
-    healthCheckPath: /actuator/health
-    envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: prod
-      - key: MONGODB_URI
-        sync: false  # MongoDB Atlas — configurable en Dashboard
-      - key: GEMINI_API_KEY
-        sync: false  # Google Gemini API — configurable en Dashboard
-      - key: GROQ_API_KEY
-        sync: false  # Groq API — configurable en Dashboard
-      - key: GROQ_MODEL
-        value: llama3-8b-8192
 
